@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/roomManagementFragment">
+
+    <fragment
+        android:id="@+id/roomManagementFragment"
+        android:name="com.example.hifiwifi.ui.fragments.RoomManagementFragment"
+        android:label="Room Management" />
+
+    <fragment
+        android:id="@+id/measurementFragment"
+        android:name="com.example.hifiwifi.ui.fragments.MeasurementFragment"
+        android:label="WiFi Measurement" />
+
+    <fragment
+        android:id="@+id/resultsFragment"
+        android:name="com.example.hifiwifi.ui.fragments.ResultsFragment"
+        android:label="Results" />
+
+    <fragment
+        android:id="@+id/bleConnectionFragment"
+        android:name="com.example.hifiwifi.ui.fragments.BLEConnectionFragment"
+        android:label="BLE Connection" />
+
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.example.hifiwifi.ui.fragments.ChatFragment"
+        android:label="SLM Chat" />
+
+    <fragment
+        android:id="@+id/recommendationFragment"
+        android:name="com.example.hifiwifi.ui.fragments.RecommendationFragment"
+        android:label="Recommendations" />
+
+</navigation>

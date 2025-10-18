@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item
+        android:id="@+id/roomManagementFragment"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="Rooms" />
+    
+    <item
+        android:id="@+id/measurementFragment"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="Measure" />
+    
+    <item
+        android:id="@+id/resultsFragment"
+        android:icon="@android:drawable/ic_menu_view"
+        android:title="Results" />
+    
+    <item
+        android:id="@+id/bleConnectionFragment"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="BLE" />
+    
+    <item
+        android:id="@+id/chatFragment"
+        android:icon="@android:drawable/ic_menu_chat"
+        android:title="Chat" />
+    
+</menu>
