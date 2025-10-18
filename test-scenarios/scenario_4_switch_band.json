@@ -1,0 +1,19 @@
+{
+  "scenario_name": "Should Switch to 5GHz",
+  "description": "Office on 2.4GHz with good signal but limited speed, should switch to 5GHz for better performance",
+  "measurement": {
+    "location": "office",
+    "signal_dbm": -55,
+    "link_speed_mbps": 144,
+    "latency_ms": 18,
+    "frequency": "2.4GHz",
+    "activity": "streaming"
+  },
+  "expected_outcome": {
+    "current_quality": "moderate",
+    "signal_rating": 6,
+    "suitable_for_activity": true,
+    "recommended_action": "switch_band"
+  }
+}
+

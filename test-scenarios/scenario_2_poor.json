@@ -1,0 +1,19 @@
+{
+  "scenario_name": "Poor 2.4GHz Bedroom Connection",
+  "description": "Bedroom far from router with weak 2.4GHz signal during video call",
+  "measurement": {
+    "location": "bedroom",
+    "signal_dbm": -78,
+    "link_speed_mbps": 65,
+    "latency_ms": 52,
+    "frequency": "2.4GHz",
+    "activity": "video_call"
+  },
+  "expected_outcome": {
+    "current_quality": "poor",
+    "signal_rating": 3,
+    "suitable_for_activity": false,
+    "recommended_action": "move_location"
+  }
+}
+

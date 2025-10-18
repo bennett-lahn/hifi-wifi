@@ -1,0 +1,11 @@
+Analyze this WiFi measurement:
+{
+  "location": {"room_id": "living_room"},
+  "native_metrics": {
+    "rssi_dbm": -45,
+    "link_speed_mbps": 866,
+    "frequency_mhz": 5180
+  },
+  "network_tests": {"latency_ms": 12},
+  "context": {"user_activity": "gaming"}
+}
