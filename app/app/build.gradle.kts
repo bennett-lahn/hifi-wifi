@@ -7,6 +7,8 @@ android {
     compileSdk {
         version = release(36)
     }
+    
+    buildToolsVersion = "36.0.0"
 
     defaultConfig {
         applicationId = "com.example.hifiwifi"
@@ -57,7 +59,19 @@ dependencies {
     // Speedtest Library
     implementation("fr.bmartel:jspeedtest:1.32.1")
     
+    // Unit Testing
     testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:4.11.0")
+    testImplementation("org.mockito:mockito-inline:4.11.0")
+    testImplementation("org.robolectric:robolectric:4.10.3")
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.test.ext:junit:1.1.5")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    
+    // Android Instrumented Testing
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("org.mockito:mockito-android:4.11.0")
 }
