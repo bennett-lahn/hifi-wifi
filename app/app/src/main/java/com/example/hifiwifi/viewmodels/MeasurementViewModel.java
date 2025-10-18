@@ -10,19 +10,16 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.hifiwifi.models.ClassificationResult;
 import com.example.hifiwifi.models.NetworkMetrics;
 import com.example.hifiwifi.models.RoomMeasurement;
-import com.example.hifiwifi.repository.MeasurementRepository;
-import com.example.hifiwifi.services.WiFiMeasurementService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * ViewModel for managing WiFi measurements and classifications
  * Exposes LiveData for UI observation
+ * MOCK VERSION - Disconnected from actual services for UI development
  */
 public class MeasurementViewModel extends AndroidViewModel {
-    
-    private MeasurementRepository measurementRepository;
-    private WiFiMeasurementService wifiMeasurementService;
     
     // LiveData for UI observation
     private MutableLiveData<NetworkMetrics> currentMetrics;
@@ -31,12 +28,12 @@ public class MeasurementViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> isMeasuring;
     private MutableLiveData<String> errorMessage;
     
+    // Mock data storage
+    private List<RoomMeasurement> mockMeasurements;
+    private List<ClassificationResult> mockClassifications;
+    
     public MeasurementViewModel(@NonNull Application application) {
         super(application);
-        
-        // Initialize repositories and services
-        measurementRepository = new MeasurementRepository();
-        wifiMeasurementService = new WiFiMeasurementService(application);
         
         // Initialize LiveData
         currentMetrics = new MutableLiveData<>();
@@ -45,32 +42,42 @@ public class MeasurementViewModel extends AndroidViewModel {
         isMeasuring = new MutableLiveData<>(false);
         errorMessage = new MutableLiveData<>();
         
-        // Setup service callback
-        wifiMeasurementService.setCallback(new WiFiMeasurementService.MeasurementCallback() {
-            @Override
-            public void onMeasurementUpdate(NetworkMetrics metrics) {
-                currentMetrics.postValue(metrics);
-            }
-            
-            @Override
-            public void onMeasurementComplete(RoomMeasurement measurement) {
-                // Add measurement to repository
-                measurementRepository.addMeasurement(measurement);
-                
-                // Update LiveData
-                allMeasurements.postValue(measurementRepository.getMeasurements());
-                classifications.postValue(measurementRepository.getAllClassifications());
-            }
-            
-            @Override
-            public void onError(String error) {
-                errorMessage.postValue(error);
-            }
-        });
+        // Initialize mock data
+        mockMeasurements = new ArrayList<>();
+        mockClassifications = new ArrayList<>();
         
-        // Initialize with empty data
-        allMeasurements.setValue(measurementRepository.getMeasurements());
-        classifications.setValue(measurementRepository.getAllClassifications());
+        // Initialize with mock data for UI development
+        initializeMockData();
+        
+        allMeasurements.setValue(mockMeasurements);
+        classifications.setValue(mockClassifications);
+    }
+    
+    /**
+     * Initialize mock data for UI development
+     */
+    private void initializeMockData() {
+        // Create mock measurements
+        mockMeasurements.add(new RoomMeasurement(
+            "room1", "Living Room", -45, 25, 85.5, "gaming"
+        ));
+        mockMeasurements.add(new RoomMeasurement(
+            "room2", "Bedroom", -65, 45, 45.2, "streaming"
+        ));
+        mockMeasurements.add(new RoomMeasurement(
+            "room3", "Kitchen", -55, 35, 65.8, "video_call"
+        ));
+        
+        // Create mock classifications
+        mockClassifications.add(new ClassificationResult(
+            "room1", "Living Room", 95, 88, 92, "A", "Excellent"
+        ));
+        mockClassifications.add(new ClassificationResult(
+            "room2", "Bedroom", 75, 82, 78, "B", "Good"
+        ));
+        mockClassifications.add(new ClassificationResult(
+            "room3", "Kitchen", 65, 70, 68, "C", "Fair"
+        ));
     }
     
     // LiveData getters
@@ -95,7 +102,7 @@ public class MeasurementViewModel extends AndroidViewModel {
     }
     
     /**
-     * Start measurement for a specific room
+     * Start measurement for a specific room (MOCK VERSION)
      */
     public void startMeasurement(String roomId, String roomName, String activityType) {
         if (isMeasuring.getValue() != null && isMeasuring.getValue()) {
@@ -103,57 +110,83 @@ public class MeasurementViewModel extends AndroidViewModel {
         }
         
         isMeasuring.setValue(true);
-        wifiMeasurementService.startMeasurement(roomName);
+        
+        // Simulate measurement with mock data
+        simulateMeasurement(roomName);
     }
     
     /**
-     * Stop current measurement
+     * Stop current measurement (MOCK VERSION)
      */
     public void stopMeasurement() {
         isMeasuring.setValue(false);
-        wifiMeasurementService.stopMeasurement();
     }
     
     /**
-     * Add a manual measurement
+     * Simulate measurement with mock data
+     */
+    private void simulateMeasurement(String roomName) {
+        // Create mock metrics that change over time
+        NetworkMetrics mockMetrics = new NetworkMetrics(
+            -50 + (int)(Math.random() * 30), // Random signal strength between -50 and -80
+            20 + (int)(Math.random() * 40),  // Random latency between 20 and 60ms
+            50 + Math.random() * 50,         // Random bandwidth between 50 and 100 Mbps
+            true,
+            roomName
+        );
+        currentMetrics.setValue(mockMetrics);
+    }
+    
+    /**
+     * Add a manual measurement (MOCK VERSION)
      */
     public void addMeasurement(String roomId, String roomName, String activityType) {
-        RoomMeasurement measurement = wifiMeasurementService.createRoomMeasurement(
-            roomId, roomName, activityType
+        RoomMeasurement measurement = new RoomMeasurement(
+            roomId, roomName, 
+            -50 + (int)(Math.random() * 30), // Random signal strength
+            20 + (int)(Math.random() * 40),  // Random latency
+            50 + Math.random() * 50,         // Random bandwidth
+            activityType
         );
-        measurementRepository.addMeasurement(measurement);
         
-        // Update LiveData
-        allMeasurements.setValue(measurementRepository.getMeasurements());
-        classifications.setValue(measurementRepository.getAllClassifications());
+        mockMeasurements.add(measurement);
+        allMeasurements.setValue(new ArrayList<>(mockMeasurements));
     }
     
     /**
-     * Get measurements for a specific room
+     * Get measurements for a specific room (MOCK VERSION)
      */
     public List<RoomMeasurement> getMeasurementsForRoom(String roomId) {
-        return measurementRepository.getMeasurementsForRoom(roomId);
+        List<RoomMeasurement> roomMeasurements = new ArrayList<>();
+        for (RoomMeasurement measurement : mockMeasurements) {
+            if (measurement.getRoomId().equals(roomId)) {
+                roomMeasurements.add(measurement);
+            }
+        }
+        return roomMeasurements;
     }
     
     /**
-     * Get classification for a specific room
+     * Get classification for a specific room (MOCK VERSION)
      */
     public ClassificationResult getClassificationForRoom(String roomId) {
-        return measurementRepository.getClassificationForRoom(roomId);
+        for (ClassificationResult classification : mockClassifications) {
+            if (classification.getRoomId().equals(roomId)) {
+                return classification;
+            }
+        }
+        return null;
     }
     
     /**
-     * Export measurements to JSON
+     * Export measurements to JSON (MOCK VERSION)
      */
     public String exportMeasurementsToJSON() {
-        // TODO: Implement JSON export using Gson
-        List<RoomMeasurement> measurements = measurementRepository.getMeasurements();
-        // For now, return a simple string representation
         StringBuilder json = new StringBuilder();
         json.append("{\"measurements\":[");
-        for (int i = 0; i < measurements.size(); i++) {
+        for (int i = 0; i < mockMeasurements.size(); i++) {
             if (i > 0) json.append(",");
-            RoomMeasurement m = measurements.get(i);
+            RoomMeasurement m = mockMeasurements.get(i);
             json.append("{");
             json.append("\"roomId\":\"").append(m.getRoomId()).append("\",");
             json.append("\"roomName\":\"").append(m.getRoomName()).append("\",");
@@ -169,12 +202,13 @@ public class MeasurementViewModel extends AndroidViewModel {
     }
     
     /**
-     * Clear all measurements
+     * Clear all measurements (MOCK VERSION)
      */
     public void clearAllMeasurements() {
-        measurementRepository.clearAll();
-        allMeasurements.setValue(measurementRepository.getMeasurements());
-        classifications.setValue(measurementRepository.getAllClassifications());
+        mockMeasurements.clear();
+        mockClassifications.clear();
+        allMeasurements.setValue(new ArrayList<>(mockMeasurements));
+        classifications.setValue(new ArrayList<>(mockClassifications));
     }
     
     /**
@@ -187,6 +221,6 @@ public class MeasurementViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        wifiMeasurementService.cleanup();
+        // No cleanup needed for mock version
     }
 }

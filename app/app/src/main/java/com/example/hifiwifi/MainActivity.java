@@ -1,43 +1,32 @@
 package com.example.hifiwifi;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.NavigationUI;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
+import com.example.hifiwifi.ui.fragments.BLEConnectionFragment;
+import com.example.hifiwifi.ui.fragments.ChatFragment;
+import com.example.hifiwifi.ui.fragments.MeasurementFragment;
+import com.example.hifiwifi.ui.fragments.ResultsFragment;
+import com.example.hifiwifi.ui.fragments.RoomManagementFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+/**
+ * MainActivity - UI Skeleton Only
+ * No services, no ViewModels, no data connections
+ * Just basic UI for development and testing
+ */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String[] REQUIRED_PERMISSIONS = {
-            Manifest.permission.ACCESS_WIFI_STATE,
-            Manifest.permission.ACCESS_NETWORK_STATE,
-            Manifest.permission.CHANGE_WIFI_STATE,
-            Manifest.permission.INTERNET,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN
-    };
-
-    private static final String[] REQUIRED_PERMISSIONS_API_31 = {
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT
-    };
-
-    private ActivityResultLauncher<String[]> requestPermissionLauncher;
+    private BottomNavigationView bottomNavigationView;
+    private FragmentManager fragmentManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,56 +40,44 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        setupNavigation();
-        setupPermissions();
+        setupUI();
     }
 
-    private void setupNavigation() {
-        // Setup BottomNavigationView with NavController
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationUI.setupWithNavController(bottomNavigationView, navController);
+    private void setupUI() {
+        fragmentManager = getSupportFragmentManager();
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        
+        // Setup bottom navigation click listener
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            
+            if (itemId == R.id.roomManagementFragment) {
+                showFragment(new RoomManagementFragment(), "RoomManagement");
+                return true;
+            } else if (itemId == R.id.measurementFragment) {
+                showFragment(new MeasurementFragment(), "Measurement");
+                return true;
+            } else if (itemId == R.id.resultsFragment) {
+                showFragment(new ResultsFragment(), "Results");
+                return true;
+            } else if (itemId == R.id.bleConnectionFragment) {
+                showFragment(new BLEConnectionFragment(), "BLEConnection");
+                return true;
+            } else if (itemId == R.id.chatFragment) {
+                showFragment(new ChatFragment(), "Chat");
+                return true;
+            }
+            
+            return false;
+        });
+        
+        // Show default fragment
+        showFragment(new RoomManagementFragment(), "RoomManagement");
     }
 
-    private void setupPermissions() {
-        requestPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestMultiplePermissions(),
-                result -> {
-                    boolean allGranted = true;
-                    for (Boolean granted : result.values()) {
-                        if (!granted) {
-                            allGranted = false;
-                            break;
-                        }
-                    }
-                    
-                    if (!allGranted) {
-                        // TODO: Show permission denied dialog or handle gracefully
-                        // For now, just log the issue
-                        System.out.println("Some permissions were denied");
-                    }
-                }
-        );
-
-        // Check and request permissions
-        checkAndRequestPermissions();
-    }
-
-    private void checkAndRequestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12+ requires additional BLE permissions
-            String[] allPermissions = new String[REQUIRED_PERMISSIONS.length + REQUIRED_PERMISSIONS_API_31.length];
-            System.arraycopy(REQUIRED_PERMISSIONS, 0, allPermissions, 0, REQUIRED_PERMISSIONS.length);
-            System.arraycopy(REQUIRED_PERMISSIONS_API_31, 0, allPermissions, REQUIRED_PERMISSIONS.length, REQUIRED_PERMISSIONS_API_31.length);
-            requestPermissionLauncher.launch(allPermissions);
-        } else {
-            requestPermissionLauncher.launch(REQUIRED_PERMISSIONS);
-        }
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        return navController.navigateUp() || super.onSupportNavigateUp();
+    private void showFragment(Fragment fragment, String tag) {
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.nav_host_fragment, fragment, tag);
+        transaction.commit();
     }
 }

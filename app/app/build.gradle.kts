@@ -55,7 +55,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     
     // Speedtest Library
-    implementation("fr.bmartel:speedtest:1.32")
+    implementation("fr.bmartel:jspeedtest:1.32.1")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

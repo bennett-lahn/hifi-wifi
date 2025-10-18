@@ -73,7 +73,9 @@ public class WiFiMeasurementService {
      */
     public void stopMeasurement() {
         isMeasuring = false;
-        speedTestSocket.forceStopSpeedTest();
+        // Note: forceStopSpeedTest() method may not exist in this version of the library
+        // For now, we'll just set the flag to stop measuring
+        // TODO: Implement proper speed test stopping when library is fully integrated
     }
     
     /**

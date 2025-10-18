@@ -12,18 +12,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.hifiwifi.R;
-import com.example.hifiwifi.models.NetworkMetrics;
-import com.example.hifiwifi.repository.RoomRepository;
-import com.example.hifiwifi.viewmodels.MeasurementViewModel;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Fragment for WiFi measurement functionality
+ * Fragment for WiFi measurement functionality - UI Skeleton Only
+ * No services, no ViewModels, no data connections
  */
 public class MeasurementFragment extends Fragment {
     
@@ -35,10 +29,6 @@ public class MeasurementFragment extends Fragment {
     private TextView textBandwidth;
     private TextView textCurrentRoom;
     private TextView textMeasurementStatus;
-    
-    private MeasurementViewModel measurementViewModel;
-    private RoomRepository roomRepository;
-    private List<RoomRepository.Room> rooms;
     
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -60,19 +50,10 @@ public class MeasurementFragment extends Fragment {
         textCurrentRoom = view.findViewById(R.id.text_current_room);
         textMeasurementStatus = view.findViewById(R.id.text_measurement_status);
         
-        // Initialize ViewModel
-        measurementViewModel = new ViewModelProvider(this).get(MeasurementViewModel.class);
-        
-        // Initialize repository
-        roomRepository = new RoomRepository(requireContext());
-        
         // Setup UI
         setupSpinners();
         setupButton();
-        setupObservers();
-        
-        // Load rooms
-        loadRooms();
+        updateDisplay();
     }
     
     private void setupSpinners() {
@@ -83,89 +64,43 @@ public class MeasurementFragment extends Fragment {
         activityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerActivityType.setAdapter(activityAdapter);
         
-        // Setup rooms spinner
-        ArrayAdapter<RoomRepository.Room> roomAdapter = new ArrayAdapter<RoomRepository.Room>(requireContext(),
-                android.R.layout.simple_spinner_item, new ArrayList<>()) {
-            @Override
-            public String toString() {
-                return getItem(0) != null ? getItem(0).getName() : "";
-            }
-        };
+        // Setup rooms spinner with mock data
+        String[] mockRooms = {"Living Room", "Bedroom", "Kitchen", "Office"};
+        ArrayAdapter<String> roomAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_spinner_item, mockRooms);
         roomAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRooms.setAdapter(roomAdapter);
     }
     
     private void setupButton() {
         buttonStartMeasurement.setOnClickListener(v -> {
-            if (measurementViewModel.getIsMeasuring().getValue() != null && 
-                measurementViewModel.getIsMeasuring().getValue()) {
-                // Stop measurement
-                measurementViewModel.stopMeasurement();
+            // Mock measurement toggle
+            String currentText = buttonStartMeasurement.getText().toString();
+            if (currentText.equals("Start Measurement")) {
+                buttonStartMeasurement.setText("Stop Measurement");
+                textMeasurementStatus.setText("Status: Measuring... (Mock)");
+                updateMockMetrics();
             } else {
-                // Start measurement
-                RoomRepository.Room selectedRoom = (RoomRepository.Room) spinnerRooms.getSelectedItem();
-                String activityType = (String) spinnerActivityType.getSelectedItem();
-                
-                if (selectedRoom != null) {
-                    measurementViewModel.startMeasurement(
-                        selectedRoom.getId(), 
-                        selectedRoom.getName(), 
-                        activityType
-                    );
-                } else {
-                    // TODO: Show error message
-                }
+                buttonStartMeasurement.setText("Start Measurement");
+                textMeasurementStatus.setText("Status: Stopped");
             }
         });
     }
     
-    private void setupObservers() {
-        // Observe current metrics
-        measurementViewModel.getCurrentMetrics().observe(getViewLifecycleOwner(), metrics -> {
-            if (metrics != null) {
-                updateMetricsDisplay(metrics);
-            }
-        });
-        
-        // Observe measurement status
-        measurementViewModel.getIsMeasuring().observe(getViewLifecycleOwner(), isMeasuring -> {
-            if (isMeasuring != null) {
-                updateMeasurementStatus(isMeasuring);
-            }
-        });
-        
-        // Observe error messages
-        measurementViewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
-            if (error != null) {
-                // TODO: Show error message to user
-                textMeasurementStatus.setText("Error: " + error);
-                measurementViewModel.clearError();
-            }
-        });
+    private void updateMockMetrics() {
+        // Mock data for UI development
+        textSignalStrength.setText("-45 dBm");
+        textLatency.setText("25 ms");
+        textBandwidth.setText("85.5 Mbps");
+        textCurrentRoom.setText("Current Room: " + spinnerRooms.getSelectedItem().toString());
     }
     
-    private void loadRooms() {
-        rooms = roomRepository.getRooms();
-        ArrayAdapter<RoomRepository.Room> adapter = (ArrayAdapter<RoomRepository.Room>) spinnerRooms.getAdapter();
-        adapter.clear();
-        adapter.addAll(rooms);
-        adapter.notifyDataSetChanged();
-    }
-    
-    private void updateMetricsDisplay(NetworkMetrics metrics) {
-        textSignalStrength.setText(metrics.getCurrentSignalDbm() + " dBm");
-        textLatency.setText(metrics.getCurrentLatencyMs() + " ms");
-        textBandwidth.setText(String.format("%.1f Mbps", metrics.getCurrentBandwidthMbps()));
-        textCurrentRoom.setText("Current Room: " + metrics.getCurrentRoomName());
-    }
-    
-    private void updateMeasurementStatus(boolean isMeasuring) {
-        if (isMeasuring) {
-            buttonStartMeasurement.setText("Stop Measurement");
-            textMeasurementStatus.setText("Status: Measuring...");
-        } else {
-            buttonStartMeasurement.setText("Start Measurement");
-            textMeasurementStatus.setText("Status: Stopped");
-        }
+    private void updateDisplay() {
+        // Initialize with mock data
+        textSignalStrength.setText("-100 dBm");
+        textLatency.setText("0 ms");
+        textBandwidth.setText("0.0 Mbps");
+        textCurrentRoom.setText("Current Room: None");
+        textMeasurementStatus.setText("Status: Stopped");
     }
 }

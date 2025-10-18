@@ -8,45 +8,69 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.hifiwifi.models.ChatMessage;
-import com.example.hifiwifi.repository.ChatRepository;
-import com.example.hifiwifi.viewmodels.BLEViewModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * ViewModel for managing chat functionality with SLM
  * Exposes LiveData for UI observation
+ * MOCK VERSION - Disconnected from actual services for UI development
  */
 public class ChatViewModel extends AndroidViewModel {
-    
-    private ChatRepository chatRepository;
-    private BLEViewModel bleViewModel;
     
     // LiveData for UI observation
     private MutableLiveData<List<ChatMessage>> messages;
     private MutableLiveData<Boolean> isWaitingForResponse;
     private MutableLiveData<String> errorMessage;
     
+    // Mock data storage
+    private List<ChatMessage> mockMessages;
+    
     public ChatViewModel(@NonNull Application application) {
         super(application);
-        
-        // Initialize repository
-        chatRepository = new ChatRepository();
         
         // Initialize LiveData
         messages = new MutableLiveData<>();
         isWaitingForResponse = new MutableLiveData<>(false);
         errorMessage = new MutableLiveData<>();
         
-        // Initialize with empty data
-        messages.setValue(chatRepository.getMessages());
+        // Initialize mock data
+        mockMessages = new ArrayList<>();
+        initializeMockMessages();
+        
+        messages.setValue(mockMessages);
     }
     
     /**
-     * Set BLE ViewModel for communication
+     * Initialize mock chat messages for UI development
+     */
+    private void initializeMockMessages() {
+        mockMessages.add(new ChatMessage(
+            "Hello! I'm your Smart Location Manager. How can I help you optimize your WiFi today?",
+            false, // isFromUser = false (SLM message)
+            "system"
+        ));
+        
+        mockMessages.add(new ChatMessage(
+            "What's the WiFi signal like in the living room?",
+            true, // isFromUser = true (User message)
+            "living_room"
+        ));
+        
+        mockMessages.add(new ChatMessage(
+            "Based on your recent measurements, the living room has excellent WiFi coverage with -45 dBm signal strength. Perfect for gaming and streaming!",
+            false, // isFromUser = false (SLM message)
+            "living_room"
+        ));
+    }
+    
+    /**
+     * Set BLE ViewModel for communication (MOCK VERSION - no-op)
      */
     public void setBLEViewModel(BLEViewModel bleViewModel) {
-        this.bleViewModel = bleViewModel;
+        // In mock version, we don't need to store the BLE ViewModel
+        // This method exists for compatibility with the UI
     }
     
     // LiveData getters
@@ -63,7 +87,7 @@ public class ChatViewModel extends AndroidViewModel {
     }
     
     /**
-     * Send a message to the SLM
+     * Send a message to the SLM (MOCK VERSION)
      */
     public void sendMessage(String messageText, String roomContext) {
         if (messageText == null || messageText.trim().isEmpty()) {
@@ -71,65 +95,121 @@ public class ChatViewModel extends AndroidViewModel {
             return;
         }
         
-        // Add user message to repository
-        chatRepository.addUserMessage(messageText.trim(), roomContext);
-        messages.setValue(chatRepository.getMessages());
+        // Add user message to mock data
+        ChatMessage userMessage = new ChatMessage(
+            messageText.trim(),
+            true, // isFromUser = true
+            roomContext
+        );
+        mockMessages.add(userMessage);
+        messages.setValue(new ArrayList<>(mockMessages));
         
-        // Send to Pi via BLE if connected
-        if (bleViewModel != null && bleViewModel.isConnected()) {
-            isWaitingForResponse.setValue(true);
-            bleViewModel.sendChatMessage(messageText.trim());
+        // Simulate waiting for response
+        isWaitingForResponse.setValue(true);
+        
+        // Simulate SLM response after a delay
+        simulateSLMResponse(messageText.trim(), roomContext);
+    }
+    
+    /**
+     * Simulate SLM response with mock data
+     */
+    private void simulateSLMResponse(String userMessage, String roomContext) {
+        // Simulate response delay
+        String response = generateMockResponse(userMessage, roomContext);
+        
+        ChatMessage slmMessage = new ChatMessage(
+            response,
+            false, // isFromUser = false (SLM message)
+            roomContext
+        );
+        mockMessages.add(slmMessage);
+        messages.setValue(new ArrayList<>(mockMessages));
+        isWaitingForResponse.setValue(false);
+    }
+    
+    /**
+     * Generate mock SLM responses based on user input
+     */
+    private String generateMockResponse(String userMessage, String roomContext) {
+        String lowerMessage = userMessage.toLowerCase();
+        
+        if (lowerMessage.contains("signal") || lowerMessage.contains("wifi")) {
+            return "Based on your recent measurements, the " + roomContext + " has good WiFi coverage. " +
+                   "Signal strength is around -50 dBm, which is suitable for most activities.";
+        } else if (lowerMessage.contains("gaming")) {
+            return "For gaming in the " + roomContext + ", I recommend checking your latency. " +
+                   "Your current setup should work well for most games.";
+        } else if (lowerMessage.contains("streaming")) {
+            return "The " + roomContext + " has adequate bandwidth for streaming. " +
+                   "You should be able to stream in HD without issues.";
+        } else if (lowerMessage.contains("help")) {
+            return "I can help you optimize your WiFi! Try asking about signal strength, " +
+                   "gaming performance, or streaming quality in specific rooms.";
         } else {
-            // TODO: Handle offline mode or show error
-            errorMessage.setValue("Not connected to Raspberry Pi");
-            isWaitingForResponse.setValue(false);
+            return "That's an interesting question about the " + roomContext + ". " +
+                   "Let me analyze your WiFi data and get back to you with recommendations.";
         }
     }
     
     /**
-     * Add SLM response message
+     * Add SLM response message (MOCK VERSION)
      */
     public void addSLMResponse(String responseText, String roomContext) {
-        chatRepository.addSLMMessage(responseText, roomContext);
-        messages.setValue(chatRepository.getMessages());
+        ChatMessage slmMessage = new ChatMessage(
+            responseText,
+            false, // isFromUser = false (SLM message)
+            roomContext
+        );
+        mockMessages.add(slmMessage);
+        messages.setValue(new ArrayList<>(mockMessages));
         isWaitingForResponse.setValue(false);
     }
     
     /**
-     * Clear all chat messages
+     * Clear all chat messages (MOCK VERSION)
      */
     public void clearChat() {
-        chatRepository.clearMessages();
-        messages.setValue(chatRepository.getMessages());
+        mockMessages.clear();
+        messages.setValue(new ArrayList<>(mockMessages));
         isWaitingForResponse.setValue(false);
     }
     
     /**
-     * Get messages for a specific room
+     * Get messages for a specific room (MOCK VERSION)
      */
     public List<ChatMessage> getMessagesForRoom(String roomContext) {
-        return chatRepository.getMessagesForRoom(roomContext);
+        List<ChatMessage> roomMessages = new ArrayList<>();
+        for (ChatMessage message : mockMessages) {
+            if (message.getRoomContext().equals(roomContext)) {
+                roomMessages.add(message);
+            }
+        }
+        return roomMessages;
     }
     
     /**
-     * Get the last message
+     * Get the last message (MOCK VERSION)
      */
     public ChatMessage getLastMessage() {
-        return chatRepository.getLastMessage();
+        if (mockMessages.isEmpty()) {
+            return null;
+        }
+        return mockMessages.get(mockMessages.size() - 1);
     }
     
     /**
-     * Check if there are any messages
+     * Check if there are any messages (MOCK VERSION)
      */
     public boolean hasMessages() {
-        return chatRepository.hasMessages();
+        return !mockMessages.isEmpty();
     }
     
     /**
-     * Get message count
+     * Get message count (MOCK VERSION)
      */
     public int getMessageCount() {
-        return chatRepository.getMessageCount();
+        return mockMessages.size();
     }
     
     /**
