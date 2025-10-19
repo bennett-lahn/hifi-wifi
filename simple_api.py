@@ -118,14 +118,27 @@ def analyze_wifi():
                 "error": f"Invalid field values: {str(e)}"
             }), 400
         
+        # Classify the raw measurements locally (for better LLM understanding)
+        classified_measurement = {
+            "location": measurement["location"],
+            "signal_strength": classify_signal_strength(signal_dbm),
+            "signal_dbm": signal_dbm,
+            "latency": classify_latency(latency),
+            "latency_ms": latency,
+            "bandwidth": classify_bandwidth(link_speed),
+            "link_speed_mbps": link_speed,
+            "frequency": measurement["frequency"],
+            "activity": measurement["activity"]
+        }
+        
         # Log the request
         logger.info(f"Analyzing WiFi: {measurement['location']} - "
-                   f"RSSI: {signal_dbm} dBm, "
-                   f"Speed: {link_speed} Mbps, "
+                   f"RSSI: {signal_dbm} dBm ({classified_measurement['signal_strength']}), "
+                   f"Speed: {link_speed} Mbps ({classified_measurement['bandwidth']}), "
                    f"Activity: {measurement['activity']}")
         
-        # Call Ollama service
-        result = service.analyze_wifi_measurement(measurement)
+        # Call Ollama service with classified data
+        result = service.analyze_wifi_measurement(classified_measurement)
         
         # Log the result
         if result.get("status") == "success":
@@ -142,6 +155,31 @@ def analyze_wifi():
             "status": "error",
             "error": f"Internal server error: {str(e)}"
         }), 500
+
+
+def classify_signal_strength(rssi_dbm):
+    """Classify signal strength from RSSI value."""
+    if rssi_dbm >= -50: return "excellent"
+    if rssi_dbm >= -60: return "good"
+    if rssi_dbm >= -70: return "fair"
+    if rssi_dbm >= -80: return "poor"
+    return "very_poor"
+
+
+def classify_latency(latency_ms):
+    """Classify latency from milliseconds."""
+    if latency_ms < 20: return "excellent"
+    if latency_ms < 50: return "good"
+    if latency_ms < 100: return "fair"
+    return "poor"
+
+
+def classify_bandwidth(speed_mbps):
+    """Classify bandwidth from link speed."""
+    if speed_mbps >= 500: return "excellent"
+    if speed_mbps >= 100: return "good"
+    if speed_mbps >= 50: return "fair"
+    return "poor"
 
 
 @app.route('/explain', methods=['POST'])
@@ -320,7 +358,8 @@ if __name__ == '__main__':
     logger.info("Starting Flask server on http://0.0.0.0:5000")
     logger.info("API endpoints:")
     logger.info("  GET  /health  - Health check")
-    logger.info("  POST /analyze - WiFi analysis")
+    logger.info("  POST /analyze - WiFi analysis (accepts raw measurements)")
+    logger.info("  POST /explain - Get friendly explanation for recommendation")
     logger.info("  POST /chat    - Natural language queries")
     
     app.run(

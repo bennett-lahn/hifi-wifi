@@ -1,0 +1,18 @@
+{
+  "scenario_name": "Poor Signal - Video Call",
+  "description": "Bedroom with poor signal during video call, should recommend moving",
+  "measurement": {
+    "location": "bedroom",
+    "signal_dbm": -78,
+    "link_speed_mbps": 65,
+    "latency_ms": 52,
+    "frequency": "2.4GHz",
+    "activity": "video_call"
+  },
+  "expected_outcome": {
+    "current_quality": "poor",
+    "suitable_for_activity": false,
+    "recommended_action": "move_location"
+  }
+}
+

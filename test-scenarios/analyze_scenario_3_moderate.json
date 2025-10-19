@@ -1,0 +1,18 @@
+{
+  "scenario_name": "Moderate Setup - Browsing",
+  "description": "Kitchen with fair signal but good latency and bandwidth for browsing",
+  "measurement": {
+    "location": "kitchen",
+    "signal_dbm": -68,
+    "link_speed_mbps": 144,
+    "latency_ms": 28,
+    "frequency": "2.4GHz",
+    "activity": "browsing"
+  },
+  "expected_outcome": {
+    "current_quality": "moderate",
+    "suitable_for_activity": true,
+    "recommended_action": "stay_current"
+  }
+}
+
