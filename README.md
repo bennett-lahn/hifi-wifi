@@ -15,12 +15,33 @@ Hi-FI/
 │   └── scenario_4_switch_band.json
 ├── training-data/                   # For Phase 2 fine-tuning
 ├── ollama_service.py               # Core Python service for Ollama API
-├── simple_api.py                   # Flask REST API wrapper (for Android)
+├── simple_api.py                   # Flask REST API (HTTP server for Android)
 ├── requirements.txt                # Python dependencies
 ├── API_DOCUMENTATION.md            # Complete API docs for Android developers
 ├── ALIGNMENT_CHECKLIST.md          # Modelfile ↔ Python alignment verification
+├── WiFiClassifier.java             # Android reference: classify WiFi measurements
+├── WiFiRecommendationEngine.java   # Android reference: decision-making logic
+├── ANDROID_QUICK_START.md          # Quick start guide for Android developers
 └── README.md                       # This file
 ```
+
+## Architecture
+
+The system uses a simple **HTTP REST API** for communication between the Android app and Raspberry Pi:
+
+```
+Android App → HTTP → Raspberry Pi (Flask) → Ollama → Qwen 3
+            WiFi    simple_api.py                   (LLM)
+
+Android ← JSON Response ← Flask API ← Explanation Text
+```
+
+**Why HTTP?**
+- ✅ Simple, standard REST API
+- ✅ Both devices on same WiFi network
+- ✅ Easy debugging and testing
+- ✅ Well-documented, mature tooling
+- ✅ Works with any HTTP client library
 
 ## Prerequisites
 
@@ -346,29 +367,74 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete implementation e
 # Health check
 curl http://localhost:5000/health
 
-# Test WiFi analysis
-curl -X POST http://localhost:5000/analyze \
+# Test the /explain endpoint (used by Android app)
+curl -X POST http://localhost:5000/explain \
   -H "Content-Type: application/json" \
   -d '{
     "location": "living_room",
-    "signal_dbm": -65,
-    "link_speed_mbps": 144,
-    "latency_ms": 25,
-    "frequency": "2.4GHz",
-    "activity": "gaming"
+    "activity": "gaming",
+    "measurements": {
+      "signal_strength": "excellent",
+      "latency": "excellent",
+      "bandwidth": "excellent"
+    },
+    "recommendation": {"action": "stay_current"}
   }'
 
 # Test from another device on network (replace with Pi's IP)
-curl -X POST http://192.168.1.100:5000/analyze \
+curl -X POST http://192.168.1.100:5000/explain \
   -H "Content-Type: application/json" \
   -d '{
     "location": "bedroom",
-    "signal_dbm": -78,
-    "link_speed_mbps": 65,
-    "latency_ms": 52,
-    "frequency": "2.4GHz",
-    "activity": "video_call"
+    "activity": "video_call",
+    "measurements": {
+      "signal_strength": "poor",
+      "latency": "fair",
+      "bandwidth": "fair"
+    },
+    "recommendation": {
+      "action": "move_location",
+      "target_location": "closer to router"
+    }
   }'
+```
+
+### Test from iPhone or Android Device
+
+**1. Find your Raspberry Pi's IP address:**
+```bash
+# On Raspberry Pi
+hostname -I
+# Example: 192.168.1.100
+```
+
+**2. Quick browser test:**
+- Open Safari/Chrome on your phone
+- Visit: `http://192.168.1.100:5000/health`
+- You should see: `{"status":"healthy",...}`
+
+**3. Full API test with REST client:**
+- Install "HTTP Request" or "API Tester" app (free on App Store/Play Store)
+- Create POST request to: `http://192.168.1.100:5000/explain`
+- Add header: `Content-Type: application/json`
+- Body:
+```json
+{
+  "location": "living_room",
+  "activity": "gaming",
+  "measurements": {
+    "signal_strength": "excellent",
+    "latency": "excellent",
+    "bandwidth": "excellent"
+  },
+  "recommendation": {"action": "stay_current"}
+}
+```
+- Send and wait 5-15 seconds for Qwen's response
+
+**Note:** If port 5000 is in use (macOS AirPlay), run Flask on different port:
+```bash
+python3 -c "from simple_api import app; app.run(host='0.0.0.0', port=5001)"
 ```
 
 ### Performance Benchmarks on Raspberry Pi
