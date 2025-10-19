@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("ROOM_NAME", roomNameText.getText().toString());
             startActivity(intent);
         });
+
     }
 
     private void showNextRoom() {

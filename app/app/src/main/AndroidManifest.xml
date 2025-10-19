@@ -29,6 +29,7 @@
         android:theme="@style/Theme.HiFiWifi">
 
         <activity android:name=".WifiTestActivity" />
+        <activity android:name=".WifiTestRunningActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
