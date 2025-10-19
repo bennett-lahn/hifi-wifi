@@ -2,6 +2,9 @@ package com.example.hifiwifi;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
@@ -56,6 +59,10 @@ public class WifiTestRunningActivity extends AppCompatActivity {
         packetLossText.setText("Packet Loss: 0%");
         strengthText.setText("Wi-Fi Strength: 0 dBm");
 
+        // Apply grow animations to buttons
+        applyButtonAnimation(cancelButton);
+        applyButtonAnimation(rerunButton);
+
         // Set up button listeners
         cancelButton.setOnClickListener(v -> finish());
         rerunButton.setOnClickListener(v -> rerunTest());
@@ -65,6 +72,24 @@ public class WifiTestRunningActivity extends AppCompatActivity {
 
         // Start the measurement
         startMeasurement();
+    }
+
+    private void applyButtonAnimation(android.view.View view) {
+        Animation scaleUp = AnimationUtils.loadAnimation(this, R.anim.button_scale_up);
+        Animation scaleDown = AnimationUtils.loadAnimation(this, R.anim.button_scale_down);
+
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.startAnimation(scaleUp);
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.startAnimation(scaleDown);
+                    break;
+            }
+            return false;
+        });
     }
 
     private void setupObservers() {
@@ -127,7 +152,6 @@ public class WifiTestRunningActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d("WifiTestRunningActivity", "Activity destroyed - cleaning up");
-        // Only stop measurement when activity is actually destroyed (user navigated away)
         if (measurementViewModel != null && isFinishing()) {
             measurementViewModel.stopMeasurement();
         }

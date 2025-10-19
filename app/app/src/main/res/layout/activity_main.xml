@@ -14,7 +14,7 @@
         android:layout_height="60dp"
         android:layout_centerVertical="true"
         android:layout_alignParentStart="true"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="10dp"
         android:background="@android:color/transparent"
         android:src="@drawable/arrow_left_pink"
         android:scaleType="fitCenter"
@@ -28,7 +28,7 @@
         android:layout_height="60dp"
         android:layout_centerVertical="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginEnd="20dp"
+        android:layout_marginEnd="10dp"
         android:background="@android:color/transparent"
         android:src="@drawable/arrow_right_pink"
         android:scaleType="fitCenter"
@@ -70,7 +70,7 @@
         android:layout_marginTop="40dp" />
 
     <!-- Bottom left cube button (placeholder for future buttons) -->
-    <!-- Floating Chat Button -->
+    <!-- Floating Chat Button with custom robot icon -->
     <ImageButton
         android:id="@+id/chatButton"
         android:layout_width="70dp"
@@ -78,13 +78,14 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:layout_margin="20dp"
-        android:backgroundTint="#FFA0D7"
-        android:background="@drawable/rounded_button_bg"
-
-        android:scaleType="centerInside"
+        android:background="@android:color/transparent"
+        android:src="@drawable/robot"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
         android:contentDescription="Chat with AI" />
 
 
-<!--     android:src="@android:drawable/ic_menu_send"-->
+
+    <!--     android:src="@android:drawable/ic_menu_send"-->
 
 </RelativeLayout>

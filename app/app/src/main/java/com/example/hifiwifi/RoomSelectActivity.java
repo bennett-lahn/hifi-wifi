@@ -2,6 +2,9 @@ package com.example.hifiwifi;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
@@ -35,7 +38,11 @@ public class RoomSelectActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(R.layout.spinner_item);
         roomSpinner.setAdapter(adapter);
 
-        // When Continue is pressed, send the selected room to ChatActivity
+        // Apply scale animation only to buttons
+        applyButtonAnimation(continueButton);
+        applyButtonAnimation(cancelButton);
+
+        // Continue → go to ChatActivity
         continueButton.setOnClickListener(v -> {
             String selectedRoom = roomSpinner.getSelectedItem().toString();
             Intent intent = new Intent(RoomSelectActivity.this, ChatActivity.class);
@@ -43,7 +50,25 @@ public class RoomSelectActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Cancel returns to the previous screen
+        // Cancel → go back
         cancelButton.setOnClickListener(v -> finish());
+    }
+
+    private void applyButtonAnimation(android.view.View view) {
+        Animation scaleUp = AnimationUtils.loadAnimation(this, R.anim.button_scale_up);
+        Animation scaleDown = AnimationUtils.loadAnimation(this, R.anim.button_scale_down);
+
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.startAnimation(scaleUp);
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.startAnimation(scaleDown);
+                    break;
+            }
+            return false; // Allow normal click handling
+        });
     }
 }
