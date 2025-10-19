@@ -6,6 +6,8 @@
     "signal_dbm": -55,
     "link_speed_mbps": 144,
     "latency_ms": 18,
+    "jitter_ms": 8,
+    "packet_loss_percent": 0.3,
     "frequency": "2.4GHz",
     "activity": "streaming"
   },
@@ -15,4 +17,3 @@
     "recommended_action": "switch_band"
   }
 }
-

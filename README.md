@@ -251,6 +251,8 @@ measurement.put("signal_dbm", wifiInfo.getRssi());           // Native API
 measurement.put("link_speed_mbps", wifiInfo.getLinkSpeed()); // Native API
 measurement.put("frequency", wifiInfo.getFrequency() > 4000 ? "5GHz" : "2.4GHz");
 measurement.put("latency_ms", measureLatency());             // HTTP ping test
+measurement.put("jitter_ms", measureJitter());               // Network test
+measurement.put("packet_loss_percent", measurePacketLoss()); // Network test
 measurement.put("activity", "gaming");
 ```
 
@@ -265,6 +267,8 @@ Content-Type: application/json
   "signal_dbm": -65,
   "link_speed_mbps": 144,
   "latency_ms": 25,
+  "jitter_ms": 12,
+  "packet_loss_percent": 0.4,
   "frequency": "2.4GHz",
   "activity": "gaming"
 }
@@ -281,16 +285,18 @@ Content-Type: application/json
 
 #### WiFi Data Collection Reliability
 
-All WiFi parameters come from **native Android APIs** (100% reliable):
+All WiFi parameters come from **native Android APIs and network tests**:
 
-| Parameter | Android API | Availability | Typical Range |
-|-----------|-------------|--------------|---------------|
+| Parameter | Android API/Method | Availability | Typical Range |
+|-----------|-------------------|--------------|---------------|
 | Signal Strength (RSSI) | `getRssi()` | ✅ All versions | -30 to -90 dBm |
-| Link Speed | `getLinkSpeed()` | ✅ All versions | 1-866+ Mbps |
+| Link Speed | `getLinkSpeed()` | ✅ All versions | 10-866+ Mbps |
 | Frequency Band | `getFrequency()` | ✅ Android 5.0+ | 2437 MHz, 5180 MHz |
 | Latency | HTTP ping test | ✅ All versions | 1-1000+ ms |
+| Jitter | Network variability test | ✅ All versions | 1-100+ ms |
+| Packet Loss | Network reliability test | ✅ All versions | 0-10% |
 
-**Total collection time:** ~1-2 seconds per measurement
+**Total collection time:** ~5-10 seconds per measurement (includes network tests)
 
 See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete implementation examples.
 
@@ -302,6 +308,8 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete implementation e
   "signal_dbm": -45,
   "link_speed_mbps": 866,
   "latency_ms": 12,
+  "jitter_ms": 3,
+  "packet_loss_percent": 0.05,
   "frequency": "5GHz",
   "activity": "gaming"
 }
@@ -319,7 +327,9 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete implementation e
     "target_location": null,
     "expected_improvements": {
       "rssi_dbm": -40,
-      "latency_ms": 8
+      "latency_ms": 8,
+      "jitter_ms": 2,
+      "packet_loss_percent": 0.02
     }
   },
   "analysis": {
@@ -336,18 +346,65 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete implementation e
 - `move_location` - Move to a different location for better signal
 - `switch_band` - Switch between 2.4GHz and 5GHz
 
-### Quality Levels
-- `excellent` - Signal > -50 dBm
-- `good` - Signal -50 to -60 dBm
-- `moderate` - Signal -60 to -70 dBm
-- `poor` - Signal -70 to -80 dBm
-- `very_poor` - Signal < -80 dBm
+### Quality Levels (5-Level Classification)
+- `excellent` - Best performance (score: 5)
+- `good` - Above average (score: 4)
+- `okay` - Acceptable (score: 3)
+- `bad` - Below average (score: 2)
+- `marginal` - Poor performance (score: 1)
+
+### Classification Thresholds
+
+**Signal Strength (RSSI):**
+- Excellent: ≥ -30 dBm
+- Good: -30 to -50 dBm
+- Okay: -50 to -65 dBm
+- Bad: -65 to -80 dBm
+- Marginal: < -80 dBm
+
+**Latency:**
+- Excellent: ≤ 20ms
+- Good: 21-50ms
+- Okay: 51-100ms
+- Bad: 101-200ms
+- Marginal: > 200ms
+
+**Bandwidth:**
+- Excellent: ≥ 100 Mbps
+- Good: 50-99 Mbps
+- Okay: 25-49 Mbps
+- Bad: 10-24 Mbps
+- Marginal: < 10 Mbps
+
+**Jitter:**
+- Excellent: ≤ 5ms
+- Good: 6-10ms
+- Okay: 11-20ms
+- Bad: 21-50ms
+- Marginal: > 50ms
+
+**Packet Loss:**
+- Excellent: ≤ 0.1%
+- Good: 0.1-0.5%
+- Okay: 0.5-1.0%
+- Bad: 1.0-2.0%
+- Marginal: > 2.0%
 
 ### Bottleneck Types
 - `signal_strength` - Weak WiFi signal
 - `latency` - High ping/delay
 - `bandwidth` - Speed limitations
+- `jitter` - Inconsistent connection
+- `packet_loss` - Data loss issues
 - `none` - No bottlenecks detected
+
+### Activity Requirements
+- **Gaming:** Needs ≤20ms latency, ≤5ms jitter, ≤0.5% packet loss
+- **Video Calls:** Needs ≤50ms latency, ≤10ms jitter, ≥25 Mbps bandwidth
+- **Streaming:** Needs ≥50 Mbps bandwidth, ≤1% packet loss
+- **Work:** Balanced requirements across all metrics
+- **General Browsing:** Needs ≥25 Mbps bandwidth
+- **IoT:** Needs ≥-65 dBm signal strength, ≤1% packet loss
 
 ## Features
 

@@ -34,6 +34,8 @@ def test_analyze_endpoint(base_url: str = "http://localhost:5000"):
         "signal_dbm": -45,
         "link_speed_mbps": 866,
         "latency_ms": 12,
+        "jitter_ms": 3,
+        "packet_loss_percent": 0.05,
         "frequency": "5GHz",
         "activity": "gaming"
     }
@@ -78,6 +80,8 @@ def test_analyze_endpoint(base_url: str = "http://localhost:5000"):
         "signal_dbm": -78,
         "link_speed_mbps": 65,
         "latency_ms": 52,
+        "jitter_ms": 35,
+        "packet_loss_percent": 1.2,
         "frequency": "2.4GHz",
         "activity": "video_call"
     }
@@ -126,6 +130,8 @@ def test_analyze_endpoint(base_url: str = "http://localhost:5000"):
         "signal_dbm": -55,
         "link_speed_mbps": 144,
         "latency_ms": 18,
+        "jitter_ms": 8,
+        "packet_loss_percent": 0.3,
         "frequency": "2.4GHz",
         "activity": "streaming"
     }
