@@ -16,7 +16,7 @@ import com.example.hifiwifi.models.NetworkMetrics;
 public class WifiTestRunningActivity extends AppCompatActivity {
 
     private TextView roomNameDisplay, speedText, latencyText, jitterText, packetLossText, strengthText, instructionText;
-    private Button cancelButton, rerunButton;
+    private Button saveButton, rerunButton, cancelButton; // Added saveButton + bottom cancelButton
     private MeasurementViewModel measurementViewModel;
     private String currentRoomName;
     private String currentActivityType = "general";
@@ -34,8 +34,9 @@ public class WifiTestRunningActivity extends AppCompatActivity {
         jitterText = findViewById(R.id.jitterText);
         packetLossText = findViewById(R.id.packetLossText);
         strengthText = findViewById(R.id.strengthText);
-        cancelButton = findViewById(R.id.cancelButton);
+        saveButton = findViewById(R.id.saveButton);
         rerunButton = findViewById(R.id.rerunButton);
+        cancelButton = findViewById(R.id.cancelButton); // Bottom cancel
 
         // Get the passed room name from intent
         currentRoomName = getIntent().getStringExtra("ROOM_NAME");
@@ -60,12 +61,18 @@ public class WifiTestRunningActivity extends AppCompatActivity {
         strengthText.setText("Wi-Fi Strength: 0 dBm");
 
         // Apply grow animations to buttons
-        applyButtonAnimation(cancelButton);
+        applyButtonAnimation(saveButton);
         applyButtonAnimation(rerunButton);
+        applyButtonAnimation(cancelButton);
 
         // Set up button listeners
-        cancelButton.setOnClickListener(v -> finish());
+        saveButton.setOnClickListener(v -> {
+            // Placeholder for save functionality
+            instructionText.setText("Results saved!");
+        });
+
         rerunButton.setOnClickListener(v -> rerunTest());
+        cancelButton.setOnClickListener(v -> finish());
 
         // Set up observers
         setupObservers();
@@ -93,29 +100,22 @@ public class WifiTestRunningActivity extends AppCompatActivity {
     }
 
     private void setupObservers() {
-        // Observe current metrics for real-time updates
         measurementViewModel.getCurrentMetrics().observe(this, metrics -> {
-            if (metrics != null) {
-                updateMetricsDisplay(metrics);
-            }
+            if (metrics != null) updateMetricsDisplay(metrics);
         });
 
-        // Observe measurement state
         measurementViewModel.getIsMeasuring().observe(this, isMeasuring -> {
-            if (isMeasuring != null) {
-                updateMeasurementState(isMeasuring);
-            }
+            if (isMeasuring != null) updateMeasurementState(isMeasuring);
         });
 
-        // Observe test completion
         measurementViewModel.getIsTestComplete().observe(this, isComplete -> {
             if (isComplete != null && isComplete) {
-                instructionText.setText("Test completed! You can rerun the test or go back.");
+                instructionText.setText("Test completed! You can save or rerun the test.");
                 rerunButton.setEnabled(true);
+                saveButton.setEnabled(true);
             }
         });
 
-        // Observe errors
         measurementViewModel.getErrorMessage().observe(this, error -> {
             if (error != null && !error.isEmpty()) {
                 instructionText.setText("Error: " + error);
@@ -135,8 +135,10 @@ public class WifiTestRunningActivity extends AppCompatActivity {
         if (isMeasuring) {
             instructionText.setText("Please stand in the center of the room while we measure your connection...");
             rerunButton.setEnabled(false);
+            saveButton.setEnabled(false);
         } else {
             rerunButton.setEnabled(true);
+            saveButton.setEnabled(true);
         }
     }
 
