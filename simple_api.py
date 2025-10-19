@@ -338,7 +338,7 @@ if __name__ == '__main__':
     logger.info("Starting Flask server on http://0.0.0.0:5000")
     logger.info("API endpoints:")
     logger.info("  GET  /health  - Health check")
-    logger.info("  POST /analyze - WiFi analysis (accepts raw measurements)")
+    logger.info("  POST /analyze - WiFi analysis (accepts classified measurements)")
     logger.info("  POST /explain - Get friendly explanation for recommendation")
     logger.info("  POST /chat    - Natural language queries")
     
