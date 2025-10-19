@@ -1,13 +1,13 @@
 {
   "scenario_name": "Good Signal on 2.4GHz - Streaming",
-  "description": "Office with good signal on 2.4GHz for streaming, should suggest switching to 5GHz",
+  "description": "Office with good metrics on 2.4GHz for streaming",
   "measurement": {
     "location": "office",
-    "signal_dbm": -55,
-    "link_speed_mbps": 144,
-    "latency_ms": 18,
-    "jitter_ms": 8,
-    "packet_loss_percent": 0.3,
+    "signal_strength": "good",
+    "latency": "excellent",
+    "bandwidth": "good",
+    "jitter": "excellent",
+    "packet_loss": "excellent",
     "frequency": "2.4GHz",
     "activity": "streaming"
   },

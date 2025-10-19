@@ -172,19 +172,19 @@ class OllamaService:
             >>> result = service.analyze_wifi_measurement(measurement)
         """
         try:
-            # Construct prompt with classified values
-            prompt = f"""Analyze this WiFi situation and explain your reasoning:
+            # Construct prompt with classified values only (no raw numbers)
+            prompt = f"""Analyze this WiFi situation and provide recommendations:
 
 Location: {measurement.get('location', 'unknown')}
-Signal Strength: {measurement.get('signal_strength', 'N/A')} ({measurement.get('signal_dbm', 'N/A')} dBm)
-Latency: {measurement.get('latency', 'N/A')} ({measurement.get('latency_ms', 'N/A')} ms)
-Bandwidth: {measurement.get('bandwidth', 'N/A')} ({measurement.get('link_speed_mbps', 'N/A')} Mbps)
-Jitter: {measurement.get('jitter', 'N/A')} ({measurement.get('jitter_ms', 'N/A')} ms)
-Packet Loss: {measurement.get('packet_loss', 'N/A')} ({measurement.get('packet_loss_percent', 'N/A')}%)
+Signal Strength: {measurement.get('signal_strength', 'N/A')}
+Latency: {measurement.get('latency', 'N/A')}
+Bandwidth: {measurement.get('bandwidth', 'N/A')}
+Jitter: {measurement.get('jitter', 'N/A')}
+Packet Loss: {measurement.get('packet_loss', 'N/A')}
 Frequency Band: {measurement.get('frequency', 'N/A')}
 Current Activity: {measurement.get('activity', 'general use')}
 
-Provide a detailed JSON response explaining WHY you recommend what you recommend."""
+Based on these classifications, provide a JSON response with your recommendation."""
 
             # Make API request
             raw_response = self._make_request(prompt, format_json=True)
@@ -374,15 +374,10 @@ def main():
     test_measurement = {
         "location": "living_room",
         "signal_strength": "excellent",
-        "signal_dbm": -45,
         "latency": "excellent",
-        "latency_ms": 12,
         "bandwidth": "excellent",
-        "link_speed_mbps": 866,
         "jitter": "excellent",
-        "jitter_ms": 3,
         "packet_loss": "excellent",
-        "packet_loss_percent": 0.05,
         "frequency": "5GHz",
         "activity": "gaming"
     }
@@ -404,15 +399,10 @@ def main():
     poor_signal_measurement = {
         "location": "bedroom",
         "signal_strength": "bad",
-        "signal_dbm": -75,
         "latency": "good",
-        "latency_ms": 45,
         "bandwidth": "okay",
-        "link_speed_mbps": 72,
         "jitter": "okay",
-        "jitter_ms": 15,
         "packet_loss": "good",
-        "packet_loss_percent": 0.3,
         "frequency": "2.4GHz",
         "activity": "video_call"
     }

@@ -31,11 +31,11 @@ def test_analyze_endpoint(base_url: str = "http://localhost:5000"):
     
     measurement1 = {
         "location": "living_room",
-        "signal_dbm": -45,
-        "link_speed_mbps": 866,
-        "latency_ms": 12,
-        "jitter_ms": 3,
-        "packet_loss_percent": 0.05,
+        "signal_strength": "excellent",
+        "latency": "excellent",
+        "bandwidth": "excellent",
+        "jitter": "excellent",
+        "packet_loss": "excellent",
         "frequency": "5GHz",
         "activity": "gaming"
     }
@@ -77,11 +77,11 @@ def test_analyze_endpoint(base_url: str = "http://localhost:5000"):
     
     measurement2 = {
         "location": "bedroom",
-        "signal_dbm": -78,
-        "link_speed_mbps": 65,
-        "latency_ms": 52,
-        "jitter_ms": 35,
-        "packet_loss_percent": 1.2,
+        "signal_strength": "bad",
+        "latency": "okay",
+        "bandwidth": "okay",
+        "jitter": "bad",
+        "packet_loss": "okay",
         "frequency": "2.4GHz",
         "activity": "video_call"
     }
@@ -127,11 +127,11 @@ def test_analyze_endpoint(base_url: str = "http://localhost:5000"):
     
     measurement3 = {
         "location": "office",
-        "signal_dbm": -55,
-        "link_speed_mbps": 144,
-        "latency_ms": 18,
-        "jitter_ms": 8,
-        "packet_loss_percent": 0.3,
+        "signal_strength": "good",
+        "latency": "excellent",
+        "bandwidth": "good",
+        "jitter": "excellent",
+        "packet_loss": "excellent",
         "frequency": "2.4GHz",
         "activity": "streaming"
     }

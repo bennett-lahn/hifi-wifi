@@ -240,19 +240,27 @@ For complete Android integration details, see [API_DOCUMENTATION.md](./API_DOCUM
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-**2. Collect WiFi Data:**
+**2. Collect and Classify WiFi Data:**
 ```java
 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 
+// Collect raw measurements
+int rssi = wifiInfo.getRssi();
+int linkSpeed = wifiInfo.getLinkSpeed();
+int latency = measureLatency();
+int jitter = measureJitter();
+float packetLoss = measurePacketLoss();
+
+// Classify using WiFiClassifier (see WiFiClassifier.java)
 JSONObject measurement = new JSONObject();
 measurement.put("location", "living_room");
-measurement.put("signal_dbm", wifiInfo.getRssi());           // Native API
-measurement.put("link_speed_mbps", wifiInfo.getLinkSpeed()); // Native API
+measurement.put("signal_strength", WiFiClassifier.classifySignalStrength(rssi));
+measurement.put("latency", WiFiClassifier.classifyLatency(latency));
+measurement.put("bandwidth", WiFiClassifier.classifyBandwidth(linkSpeed));
+measurement.put("jitter", WiFiClassifier.classifyJitter(jitter));
+measurement.put("packet_loss", WiFiClassifier.classifyPacketLoss(packetLoss));
 measurement.put("frequency", wifiInfo.getFrequency() > 4000 ? "5GHz" : "2.4GHz");
-measurement.put("latency_ms", measureLatency());             // HTTP ping test
-measurement.put("jitter_ms", measureJitter());               // Network test
-measurement.put("packet_loss_percent", measurePacketLoss()); // Network test
 measurement.put("activity", "gaming");
 ```
 
@@ -264,11 +272,11 @@ Content-Type: application/json
 
 {
   "location": "living_room",
-  "signal_dbm": -65,
-  "link_speed_mbps": 144,
-  "latency_ms": 25,
-  "jitter_ms": 12,
-  "packet_loss_percent": 0.4,
+  "signal_strength": "good",
+  "latency": "good",
+  "bandwidth": "good",
+  "jitter": "okay",
+  "packet_loss": "good",
   "frequency": "2.4GHz",
   "activity": "gaming"
 }
@@ -302,18 +310,22 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete implementation e
 
 ## WiFi Measurement Input Format
 
+Android app classifies measurements and sends classifications (not raw numbers):
+
 ```json
 {
   "location": "living_room",
-  "signal_dbm": -45,
-  "link_speed_mbps": 866,
-  "latency_ms": 12,
-  "jitter_ms": 3,
-  "packet_loss_percent": 0.05,
+  "signal_strength": "excellent",
+  "latency": "excellent",
+  "bandwidth": "excellent",
+  "jitter": "excellent",
+  "packet_loss": "excellent",
   "frequency": "5GHz",
   "activity": "gaming"
 }
 ```
+
+**Classification Values:** `excellent`, `good`, `okay`, `bad`, `marginal`
 
 ## Expected Output Format
 

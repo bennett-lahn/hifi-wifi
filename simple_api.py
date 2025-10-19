@@ -82,11 +82,10 @@ def analyze_wifi():
         
         measurement = request.json
         
-        # Validate required fields
+        # Validate required fields (Android sends pre-classified values)
         required_fields = [
-            "location", "signal_dbm", "link_speed_mbps", 
-            "latency_ms", "jitter_ms", "packet_loss_percent",
-            "frequency", "activity"
+            "location", "signal_strength", "latency", "bandwidth",
+            "jitter", "packet_loss", "frequency", "activity"
         ]
         
         missing_fields = [field for field in required_fields if field not in measurement]
@@ -97,58 +96,51 @@ def analyze_wifi():
                 "error": f"Missing required fields: {', '.join(missing_fields)}"
             }), 400
         
-        # Validate field types and ranges
+        # Validate classification values
+        valid_classifications = ["excellent", "good", "okay", "bad", "marginal"]
+        
         try:
-            signal_dbm = int(measurement["signal_dbm"])
-            link_speed = int(measurement["link_speed_mbps"])
-            latency = int(measurement["latency_ms"])
-            jitter = int(measurement["jitter_ms"])
-            packet_loss = float(measurement["packet_loss_percent"])
+            signal_strength = measurement["signal_strength"].lower()
+            latency = measurement["latency"].lower()
+            bandwidth = measurement["bandwidth"].lower()
+            jitter = measurement["jitter"].lower()
+            packet_loss = measurement["packet_loss"].lower()
             
-            if not (-100 <= signal_dbm <= 0):
-                raise ValueError("signal_dbm must be between -100 and 0")
-            
-            if not (0 <= link_speed <= 10000):
-                raise ValueError("link_speed_mbps must be between 0 and 10000")
-            
-            if not (0 <= latency <= 10000):
-                raise ValueError("latency_ms must be between 0 and 10000")
-            
-            if not (0 <= jitter <= 10000):
-                raise ValueError("jitter_ms must be between 0 and 10000")
-            
-            if not (0 <= packet_loss <= 100):
-                raise ValueError("packet_loss_percent must be between 0 and 100")
+            if signal_strength not in valid_classifications:
+                raise ValueError(f"signal_strength must be one of: {', '.join(valid_classifications)}")
+            if latency not in valid_classifications:
+                raise ValueError(f"latency must be one of: {', '.join(valid_classifications)}")
+            if bandwidth not in valid_classifications:
+                raise ValueError(f"bandwidth must be one of: {', '.join(valid_classifications)}")
+            if jitter not in valid_classifications:
+                raise ValueError(f"jitter must be one of: {', '.join(valid_classifications)}")
+            if packet_loss not in valid_classifications:
+                raise ValueError(f"packet_loss must be one of: {', '.join(valid_classifications)}")
                 
-        except (ValueError, TypeError) as e:
-            logger.warning(f"Invalid field values: {e}")
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.warning(f"Invalid classification values: {e}")
             return jsonify({
                 "status": "error",
-                "error": f"Invalid field values: {str(e)}"
+                "error": f"Invalid classification values: {str(e)}"
             }), 400
         
-        # Classify the raw measurements locally (for better LLM understanding)
+        # Use pre-classified measurements from Android
         classified_measurement = {
             "location": measurement["location"],
-            "signal_strength": classify_signal_strength(signal_dbm),
-            "signal_dbm": signal_dbm,
-            "latency": classify_latency(latency),
-            "latency_ms": latency,
-            "bandwidth": classify_bandwidth(link_speed),
-            "link_speed_mbps": link_speed,
-            "jitter": classify_jitter(jitter),
-            "jitter_ms": jitter,
-            "packet_loss": classify_packet_loss(packet_loss),
-            "packet_loss_percent": packet_loss,
+            "signal_strength": signal_strength,
+            "latency": latency,
+            "bandwidth": bandwidth,
+            "jitter": jitter,
+            "packet_loss": packet_loss,
             "frequency": measurement["frequency"],
             "activity": measurement["activity"]
         }
         
         # Log the request
         logger.info(f"Analyzing WiFi: {measurement['location']} - "
-                   f"RSSI: {signal_dbm} dBm ({classified_measurement['signal_strength']}), "
-                   f"Speed: {link_speed} Mbps ({classified_measurement['bandwidth']}), "
-                   f"Activity: {measurement['activity']}")
+                   f"Signal: {signal_strength}, Latency: {latency}, "
+                   f"Bandwidth: {bandwidth}, Jitter: {jitter}, "
+                   f"Packet Loss: {packet_loss}, Activity: {measurement['activity']}")
         
         # Call Ollama service with classified data
         result = service.analyze_wifi_measurement(classified_measurement)
@@ -168,51 +160,6 @@ def analyze_wifi():
             "status": "error",
             "error": f"Internal server error: {str(e)}"
         }), 500
-
-
-def classify_signal_strength(rssi_dbm):
-    """Classify signal strength from RSSI value."""
-    if rssi_dbm >= -30: return "excellent"
-    if rssi_dbm >= -50: return "good"
-    if rssi_dbm >= -65: return "okay"
-    if rssi_dbm >= -80: return "bad"
-    return "marginal"
-
-
-def classify_latency(latency_ms):
-    """Classify latency from milliseconds."""
-    if latency_ms <= 20: return "excellent"
-    if latency_ms <= 50: return "good"
-    if latency_ms <= 100: return "okay"
-    if latency_ms <= 200: return "bad"
-    return "marginal"
-
-
-def classify_bandwidth(speed_mbps):
-    """Classify bandwidth from link speed."""
-    if speed_mbps >= 100: return "excellent"
-    if speed_mbps >= 50: return "good"
-    if speed_mbps >= 25: return "okay"
-    if speed_mbps >= 10: return "bad"
-    return "marginal"
-
-
-def classify_jitter(jitter_ms):
-    """Classify jitter from milliseconds."""
-    if jitter_ms <= 5: return "excellent"
-    if jitter_ms <= 10: return "good"
-    if jitter_ms <= 20: return "okay"
-    if jitter_ms <= 50: return "bad"
-    return "marginal"
-
-
-def classify_packet_loss(packet_loss_percent):
-    """Classify packet loss from percentage."""
-    if packet_loss_percent <= 0.1: return "excellent"
-    if packet_loss_percent <= 0.5: return "good"
-    if packet_loss_percent <= 1.0: return "okay"
-    if packet_loss_percent <= 2.0: return "bad"
-    return "marginal"
 
 
 @app.route('/explain', methods=['POST'])
