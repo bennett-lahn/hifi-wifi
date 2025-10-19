@@ -14,6 +14,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ollama_service import OllamaService, OllamaConfig
 import logging
+import json
+import time
 
 # Configure logging
 logging.basicConfig(
@@ -30,7 +32,7 @@ CORS(app)  # Enable CORS for cross-origin requests
 config = OllamaConfig(
     base_url="http://localhost:11434",
     model_name="wifi-assistant",
-    timeout=30
+    timeout=90  # Increased for qwen3:1.7b and slower Pi models
 )
 service = OllamaService(config)
 
@@ -56,22 +58,35 @@ def health_check():
 @app.route('/analyze', methods=['POST'])
 def analyze_wifi():
     """
-    Analyze WiFi measurement data and provide recommendations.
+    Analyze WiFi measurement data from Android app.
     
-    Request Body (JSON):
+    Request Body (JSON) - New Android Format:
         {
-            "location": str,          # Room name (e.g., "living_room")
-            "signal_dbm": int,        # RSSI in dBm (-30 to -90)
-            "link_speed_mbps": int,   # Link speed in Mbps
-            "latency_ms": int,        # Latency in milliseconds
-            "frequency": str,         # "2.4GHz" or "5GHz"
-            "activity": str           # "gaming", "video_call", etc.
+            "measurements": [
+                {
+                    "roomName": str,          # e.g., "Living Room"
+                    "activityType": str,      # e.g., "general", "gaming", "streaming"
+                    "frequencyBand": str,     # e.g., "5GHz", "2.4GHz"
+                    "classification": {
+                        "signal_strength": str,   # "excellent", "good", "okay", "bad", "marginal"
+                        "latency": str,
+                        "bandwidth": str,
+                        "jitter": str,
+                        "packet_loss": str
+                    }
+                }
+            ],
+            "summary": { ... }  # Optional summary data
         }
     
+    Legacy format still supported (single measurement without array).
+    
     Returns:
-        JSON with recommendation and analysis, or error message
+        JSON with recommendation and analysis, or error message (timeout: 90s)
     """
     try:
+        start_time = time.time()
+        
         # Validate request has JSON body
         if not request.is_json:
             logger.warning("Request missing JSON body")
@@ -80,15 +95,56 @@ def analyze_wifi():
                 "error": "Request must include JSON body with Content-Type: application/json"
             }), 400
         
-        measurement = request.json
+        data = request.json
+        logger.info(f"Received request: {json.dumps(data, indent=2)}")
         
-        # Validate required fields (Android sends pre-classified values)
+        # Check for new Android format (measurements array)
+        if "measurements" in data and isinstance(data["measurements"], list):
+            logger.info(f"New Android format detected: {len(data['measurements'])} measurement(s)")
+            
+            if not data["measurements"]:
+                logger.warning("Empty measurements array")
+                return jsonify({
+                    "status": "error",
+                    "error": "measurements array is empty"
+                }), 400
+            
+            # Process first measurement (can extend to handle multiple rooms later)
+            measurement_data = data["measurements"][0]
+            logger.info(f"Processing measurement for room: {measurement_data.get('roomName', 'unknown')}")
+            
+            # Extract from new format
+            room_name = measurement_data.get("roomName", "unknown")
+            activity_type = measurement_data.get("activityType", "general")
+            frequency_band = measurement_data.get("frequencyBand", "unknown")
+            classification = measurement_data.get("classification", {})
+            
+            logger.info(f"  Room: {room_name}, Activity: {activity_type}, Frequency: {frequency_band}")
+            logger.info(f"  Classifications: {json.dumps(classification)}")
+            
+            # Map to internal format
+            measurement = {
+                "location": room_name.lower().replace(" ", "_"),
+                "activity": activity_type.lower(),
+                "frequency": frequency_band,
+                "signal_strength": classification.get("signal_strength", "").lower(),
+                "latency": classification.get("latency", "").lower(),
+                "bandwidth": classification.get("bandwidth", "").lower(),
+                "jitter": classification.get("jitter", "").lower(),
+                "packet_loss": classification.get("packet_loss", "").lower()
+            }
+        else:
+            # Legacy format (backward compatibility)
+            logger.info("Legacy format detected (single measurement)")
+            measurement = data
+        
+        # Validate required fields
         required_fields = [
             "location", "signal_strength", "latency", "bandwidth",
             "jitter", "packet_loss", "frequency", "activity"
         ]
         
-        missing_fields = [field for field in required_fields if field not in measurement]
+        missing_fields = [field for field in required_fields if field not in measurement or not measurement[field]]
         if missing_fields:
             logger.warning(f"Missing required fields: {missing_fields}")
             return jsonify({
@@ -106,16 +162,19 @@ def analyze_wifi():
             jitter = measurement["jitter"].lower()
             packet_loss = measurement["packet_loss"].lower()
             
+            logger.info(f"Validating classifications...")
             if signal_strength not in valid_classifications:
-                raise ValueError(f"signal_strength must be one of: {', '.join(valid_classifications)}")
+                raise ValueError(f"signal_strength '{signal_strength}' must be one of: {', '.join(valid_classifications)}")
             if latency not in valid_classifications:
-                raise ValueError(f"latency must be one of: {', '.join(valid_classifications)}")
+                raise ValueError(f"latency '{latency}' must be one of: {', '.join(valid_classifications)}")
             if bandwidth not in valid_classifications:
-                raise ValueError(f"bandwidth must be one of: {', '.join(valid_classifications)}")
+                raise ValueError(f"bandwidth '{bandwidth}' must be one of: {', '.join(valid_classifications)}")
             if jitter not in valid_classifications:
-                raise ValueError(f"jitter must be one of: {', '.join(valid_classifications)}")
+                raise ValueError(f"jitter '{jitter}' must be one of: {', '.join(valid_classifications)}")
             if packet_loss not in valid_classifications:
-                raise ValueError(f"packet_loss must be one of: {', '.join(valid_classifications)}")
+                raise ValueError(f"packet_loss '{packet_loss}' must be one of: {', '.join(valid_classifications)}")
+            
+            logger.info(f"✓ All classifications valid")
                 
         except (ValueError, TypeError, AttributeError) as e:
             logger.warning(f"Invalid classification values: {e}")
@@ -137,25 +196,33 @@ def analyze_wifi():
         }
         
         # Log the request
-        logger.info(f"Analyzing WiFi: {measurement['location']} - "
-                   f"Signal: {signal_strength}, Latency: {latency}, "
-                   f"Bandwidth: {bandwidth}, Jitter: {jitter}, "
-                   f"Packet Loss: {packet_loss}, Activity: {measurement['activity']}")
+        logger.info(f"→ Sending to Ollama: {measurement['location']} ({measurement['activity']} on {measurement['frequency']})")
+        logger.info(f"  Signal: {signal_strength}, Latency: {latency}, Bandwidth: {bandwidth}")
+        logger.info(f"  Jitter: {jitter}, Packet Loss: {packet_loss}")
+        logger.info(f"  Timeout: 90s (may take 10-30s on Raspberry Pi)")
         
         # Call Ollama service with classified data
+        ollama_start = time.time()
         result = service.analyze_wifi_measurement(classified_measurement)
+        ollama_time = time.time() - ollama_start
         
         # Log the result
         if result.get("status") == "success":
             action = result.get("recommendation", {}).get("action", "unknown")
-            logger.info(f"Analysis complete: {action}")
+            priority = result.get("recommendation", {}).get("priority", "unknown")
+            quality = result.get("analysis", {}).get("current_quality", "unknown")
+            logger.info(f"✓ Analysis complete in {ollama_time:.1f}s")
+            logger.info(f"  Action: {action}, Priority: {priority}, Quality: {quality}")
         else:
-            logger.error(f"Analysis failed: {result.get('error')}")
+            logger.error(f"✗ Analysis failed: {result.get('error')}")
+        
+        total_time = time.time() - start_time
+        logger.info(f"Total request time: {total_time:.1f}s")
         
         return jsonify(result), 200
         
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        logger.error(f"✗ Unexpected error: {str(e)}", exc_info=True)
         return jsonify({
             "status": "error",
             "error": f"Internal server error: {str(e)}"
@@ -338,7 +405,8 @@ if __name__ == '__main__':
     logger.info("Starting Flask server on http://0.0.0.0:5000")
     logger.info("API endpoints:")
     logger.info("  GET  /health  - Health check")
-    logger.info("  POST /analyze - WiFi analysis (accepts classified measurements)")
+    logger.info("  POST /analyze - WiFi analysis (accepts new Android format with measurements array)")
+    logger.info("                  Timeout: 90s (may take 10-30s on Raspberry Pi)")
     logger.info("  POST /explain - Get friendly explanation for recommendation")
     logger.info("  POST /chat    - Natural language queries")
     
