@@ -56,6 +56,9 @@ dependencies {
     // JSON Processing
     implementation("com.google.code.gson:gson:2.10.1")
     
+    // HTTP Client (for Raspberry Pi communication)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
     // Speedtest Library
     implementation("fr.bmartel:jspeedtest:1.32.1")
     
