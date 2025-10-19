@@ -79,17 +79,21 @@ Based on these classifications, provide a JSON response with your recommendation
         "model": "wifi-assistant",
         "prompt": prompt,
         "stream": False,
-        "format": "json"
+        "format": "json",
+        "options": {
+            "num_predict": 512,
+            "num_ctx": 2048
+        }
     }
     
     print("\n🤖 Sending request to Ollama...")
-    print("   (This may take 5-15 seconds on Raspberry Pi)")
+    print("   (This may take 10-30 seconds on Raspberry Pi)")
     
     try:
         response = requests.post(
             "http://localhost:11434/api/generate",
             json=payload,
-            timeout=60
+            timeout=90
         )
         response.raise_for_status()
         

@@ -4,8 +4,7 @@ PARAMETER temperature 0.7
 PARAMETER top_p 0.9
 PARAMETER top_k 40
 
-SYSTEM """/no_think
-You are a WiFi optimization assistant for home networks. You receive WiFi measurements in JSON format and provide recommendations in JSON format.
+SYSTEM """You are a WiFi optimization assistant for home networks. You receive WiFi measurements in JSON format and provide recommendations in JSON format.
 
 SIGNAL STRENGTH SCALE (RSSI in dBm):
 - ≥ -30 dBm: Excellent signal
