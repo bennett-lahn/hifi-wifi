@@ -70,5 +70,21 @@
         android:layout_marginTop="40dp" />
 
     <!-- Bottom left cube button (placeholder for future buttons) -->
+    <!-- Floating Chat Button -->
+    <ImageButton
+        android:id="@+id/chatButton"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="20dp"
+        android:backgroundTint="#FFA0D7"
+        android:background="@drawable/rounded_button_bg"
+
+        android:scaleType="centerInside"
+        android:contentDescription="Chat with AI" />
+
+
+<!--     android:src="@android:drawable/ic_menu_send"-->
 
 </RelativeLayout>

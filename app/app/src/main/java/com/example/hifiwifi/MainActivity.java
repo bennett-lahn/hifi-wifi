@@ -37,6 +37,13 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        ImageButton chatButton = findViewById(R.id.chatButton);
+
+        chatButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, RoomSelectActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     private void showNextRoom() {

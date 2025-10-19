@@ -30,6 +30,8 @@
 
         <activity android:name=".WifiTestActivity" />
         <activity android:name=".WifiTestRunningActivity" />
+        <activity android:name=".RoomSelectActivity" />
+        <activity android:name=".ChatActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
