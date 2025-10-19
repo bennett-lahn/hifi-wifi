@@ -140,62 +140,49 @@ class OllamaService:
         measurement: Dict[str, Union[str, int, float]]
     ) -> Dict[str, Any]:
         """
-        Analyze WiFi measurement data and get optimization recommendations.
+        Analyze WiFi measurement data with pre-classified values.
         
         Args:
             measurement: Dictionary containing WiFi measurement data with keys:
                 - location: str (e.g., "living_room")
-                - signal_dbm: int (e.g., -45)
-                - link_speed_mbps: int (e.g., 866)
-                - latency_ms: int (e.g., 12)
-                - frequency: str (e.g., "5GHz")
-                - activity: str (e.g., "gaming")
+                - signal_strength: str (e.g., "excellent", "good", "fair", "poor", "very_poor")
+                - signal_dbm: int (raw value for reference)
+                - latency: str (e.g., "excellent", "good", "fair", "poor")
+                - latency_ms: int (raw value for reference)
+                - bandwidth: str (e.g., "excellent", "good", "fair", "poor")
+                - link_speed_mbps: int (raw value for reference)
+                - frequency: str (e.g., "5GHz", "2.4GHz")
+                - activity: str (e.g., "gaming", "video_call", "streaming", "browsing")
         
         Returns:
-            Dictionary with status, recommendation, and analysis
+            Dictionary with status, recommendation with reasoning, and detailed analysis
             
         Example:
             >>> measurement = {
             ...     "location": "living_room",
+            ...     "signal_strength": "excellent",
             ...     "signal_dbm": -45,
-            ...     "link_speed_mbps": 866,
+            ...     "latency": "excellent",
             ...     "latency_ms": 12,
+            ...     "bandwidth": "excellent",
+            ...     "link_speed_mbps": 866,
             ...     "frequency": "5GHz",
             ...     "activity": "gaming"
             ... }
             >>> result = service.analyze_wifi_measurement(measurement)
         """
         try:
-            # Construct prompt for WiFi analysis
-            prompt = f"""Analyze the following WiFi measurement data and provide optimization recommendations:
+            # Construct prompt with classified values
+            prompt = f"""Analyze this WiFi situation and explain your reasoning:
 
 Location: {measurement.get('location', 'unknown')}
-Signal Strength: {measurement.get('signal_dbm', 'N/A')} dBm
-Link Speed: {measurement.get('link_speed_mbps', 'N/A')} Mbps
-Latency: {measurement.get('latency_ms', 'N/A')} ms
-Frequency: {measurement.get('frequency', 'N/A')}
+Signal Strength: {measurement.get('signal_strength', 'N/A')} ({measurement.get('signal_dbm', 'N/A')} dBm)
+Latency: {measurement.get('latency', 'N/A')} ({measurement.get('latency_ms', 'N/A')} ms)
+Bandwidth: {measurement.get('bandwidth', 'N/A')} ({measurement.get('link_speed_mbps', 'N/A')} Mbps)
+Frequency Band: {measurement.get('frequency', 'N/A')}
 Current Activity: {measurement.get('activity', 'general use')}
 
-Provide a JSON response with the following structure:
-{{
-  "status": "success",
-  "recommendation": {{
-    "action": "move_location" or "switch_band" or "stay_current",
-    "priority": "low" or "medium" or "high",
-    "message": "User-friendly explanation of what to do",
-    "target_location": "suggested location name or null",
-    "expected_improvements": {{
-      "rssi_dbm": estimated signal strength,
-      "latency_ms": estimated latency
-    }}
-  }},
-  "analysis": {{
-    "current_quality": "excellent" or "good" or "moderate" or "poor" or "very_poor",
-    "signal_rating": 0-10,
-    "suitable_for_activity": true or false,
-    "bottleneck": "signal_strength" or "latency" or "bandwidth" or "none"
-  }}
-}}"""
+Provide a detailed JSON response explaining WHY you recommend what you recommend."""
 
             # Make API request
             raw_response = self._make_request(prompt, format_json=True)
@@ -215,6 +202,94 @@ Provide a JSON response with the following structure:
                 "error": str(e),
                 "recommendation": None,
                 "analysis": None
+            }
+    
+    def explain_wifi_recommendation(
+        self,
+        location: str,
+        activity: str,
+        measurements: Dict[str, str],
+        recommendation: Dict[str, str]
+    ) -> Dict[str, Any]:
+        """
+        Generate a conversational explanation for a WiFi recommendation.
+        
+        The Android app has already classified measurements and made a decision.
+        This method asks the LLM to explain WHY that decision makes sense.
+        
+        Args:
+            location: Room name (e.g., "living_room")
+            activity: Current activity (e.g., "gaming", "streaming", "video_call", "browsing")
+            measurements: Dict with pre-classified values:
+                - signal_strength: "excellent", "good", "fair", "poor", "very_poor"
+                - latency: "excellent", "good", "fair", "poor"
+                - bandwidth: "excellent", "good", "fair", "poor"
+            recommendation: Dict with decision made by Android:
+                - action: "stay_current", "move_location", or "switch_band"
+                - target_location: Optional suggested location (for move_location)
+        
+        Returns:
+            Dictionary with conversational explanation text
+            
+        Example:
+            >>> result = service.explain_wifi_recommendation(
+            ...     "living_room", "gaming",
+            ...     {"signal_strength": "excellent", "latency": "excellent", "bandwidth": "excellent"},
+            ...     {"action": "stay_current"}
+            ... )
+            >>> print(result['explanation'])
+        """
+        try:
+            # Build action description
+            action = recommendation.get('action', 'stay_current')
+            action_desc = {
+                "stay_current": "stay where you are",
+                "move_location": f"move to {recommendation.get('target_location', 'a different location')}",
+                "switch_band": "switch to a faster network option"
+            }
+            
+            # Construct conversational prompt
+            prompt = f"""The user is in the {location} and they're {activity}.
+
+Current WiFi status:
+- Signal strength: {measurements.get('signal_strength', 'unknown')}
+- Response time (latency): {measurements.get('latency', 'unknown')}
+- Speed (bandwidth): {measurements.get('bandwidth', 'unknown')}
+
+The recommendation is to {action_desc.get(action, action)}.
+
+Explain to the user in a friendly, conversational way WHY this recommendation makes sense for their situation. Remember to:
+- Keep it brief (3-5 sentences)
+- Use everyday language, not technical jargon
+- Focus on their {activity} experience
+- Be positive and encouraging"""
+
+            # Make API request (plain text, not JSON)
+            raw_response = self._make_request(prompt, format_json=False)
+            
+            if raw_response.get("done", False):
+                explanation = raw_response.get("response", "").strip()
+                return {
+                    "status": "success",
+                    "explanation": explanation,
+                    "metadata": {
+                        "location": location,
+                        "activity": activity,
+                        "recommendation": action
+                    }
+                }
+            else:
+                return {
+                    "status": "error",
+                    "error": "Incomplete response from model",
+                    "explanation": None
+                }
+            
+        except (ConnectionError, TimeoutError, ValueError) as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "explanation": None
             }
     
     def chat_query(self, query: str, format_json: bool = False) -> Dict[str, Any]:
@@ -296,9 +371,12 @@ def main():
     
     test_measurement = {
         "location": "living_room",
+        "signal_strength": "excellent",
         "signal_dbm": -45,
-        "link_speed_mbps": 866,
+        "latency": "excellent",
         "latency_ms": 12,
+        "bandwidth": "excellent",
+        "link_speed_mbps": 866,
         "frequency": "5GHz",
         "activity": "gaming"
     }
@@ -319,9 +397,12 @@ def main():
     
     poor_signal_measurement = {
         "location": "bedroom",
+        "signal_strength": "poor",
         "signal_dbm": -75,
-        "link_speed_mbps": 72,
+        "latency": "good",
         "latency_ms": 45,
+        "bandwidth": "fair",
+        "link_speed_mbps": 72,
         "frequency": "2.4GHz",
         "activity": "video_call"
     }

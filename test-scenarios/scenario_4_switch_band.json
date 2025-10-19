@@ -1,19 +1,32 @@
 {
-  "scenario_name": "Should Switch to 5GHz",
-  "description": "Office on 2.4GHz with good signal but limited speed, should switch to 5GHz for better performance",
-  "measurement": {
+  "scenario_name": "Streaming - Switch to Faster Option (Explainer)",
+  "description": "Office with good signal and excellent latency; LLM should encourage switching to faster option without jargon",
+  "input": {
     "location": "office",
-    "signal_dbm": -55,
-    "link_speed_mbps": 144,
-    "latency_ms": 18,
-    "frequency": "2.4GHz",
-    "activity": "streaming"
+    "activity": "streaming",
+    "measurements": {
+      "signal_strength": "good",
+      "latency": "excellent",
+      "bandwidth": "good"
+    },
+    "recommendation": {
+      "action": "switch_band"
+    }
   },
-  "expected_outcome": {
-    "current_quality": "moderate",
-    "signal_rating": 6,
-    "suitable_for_activity": true,
-    "recommended_action": "switch_band"
+  "expected_explanation": {
+    "should_contain": [
+      "faster",
+      "streaming",
+      "better",
+      "speeds",
+      "loading"
+    ],
+    "should_avoid": [
+      "2.4GHz",
+      "5GHz",
+      "dBm"
+    ],
+    "max_sentences": 5
   }
 }
 

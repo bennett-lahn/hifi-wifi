@@ -1,19 +1,31 @@
 {
-  "scenario_name": "Moderate Kitchen Setup",
-  "description": "Kitchen with moderate signal, suitable for general browsing but could be improved",
-  "measurement": {
+  "scenario_name": "Browsing - Stay Current (Explainer)",
+  "description": "Kitchen with fair signal and good latency/speed; LLM should reassure staying is fine for browsing",
+  "input": {
     "location": "kitchen",
-    "signal_dbm": -62,
-    "link_speed_mbps": 300,
-    "latency_ms": 25,
-    "frequency": "5GHz",
-    "activity": "browsing"
+    "activity": "browsing",
+    "measurements": {
+      "signal_strength": "fair",
+      "latency": "good",
+      "bandwidth": "good"
+    },
+    "recommendation": {
+      "action": "stay_current"
+    }
   },
-  "expected_outcome": {
-    "current_quality": "good",
-    "signal_rating": 6,
-    "suitable_for_activity": true,
-    "recommended_action": "stay_current"
+  "expected_explanation": {
+    "should_contain": [
+      "browsing",
+      "good",
+      "sufficient",
+      "no need"
+    ],
+    "should_avoid": [
+      "2.4GHz",
+      "5GHz",
+      "dBm"
+    ],
+    "max_sentences": 5
   }
 }
 

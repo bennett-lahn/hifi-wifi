@@ -1,19 +1,34 @@
 {
-  "scenario_name": "Poor 2.4GHz Bedroom Connection",
-  "description": "Bedroom far from router with weak 2.4GHz signal during video call",
-  "measurement": {
+  "scenario_name": "Poor Signal - Move Location (Explainer)",
+  "description": "Bedroom with poor signal during video call; LLM should encourage moving closer without jargon",
+  "input": {
     "location": "bedroom",
-    "signal_dbm": -78,
-    "link_speed_mbps": 65,
-    "latency_ms": 52,
-    "frequency": "2.4GHz",
-    "activity": "video_call"
+    "activity": "video_call",
+    "measurements": {
+      "signal_strength": "poor",
+      "latency": "fair",
+      "bandwidth": "fair"
+    },
+    "recommendation": {
+      "action": "move_location",
+      "target_location": "closer to router"
+    }
   },
-  "expected_outcome": {
-    "current_quality": "poor",
-    "signal_rating": 3,
-    "suitable_for_activity": false,
-    "recommended_action": "move_location"
+  "expected_explanation": {
+    "should_contain": [
+      "signal",
+      "move",
+      "closer",
+      "video call",
+      "clear",
+      "stable"
+    ],
+    "should_avoid": [
+      "2.4GHz",
+      "5GHz",
+      "dBm"
+    ],
+    "max_sentences": 5
   }
 }
 

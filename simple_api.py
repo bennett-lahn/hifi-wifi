@@ -144,6 +144,98 @@ def analyze_wifi():
         }), 500
 
 
+@app.route('/explain', methods=['POST'])
+def explain_recommendation():
+    """
+    Generate conversational explanation for a WiFi recommendation.
+    Android app has already classified measurements and made a decision.
+    This endpoint explains WHY that decision makes sense.
+    
+    Request Body (JSON):
+        {
+            "location": str,           # Room name (e.g., "living_room")
+            "activity": str,           # What user is doing (e.g., "gaming")
+            "measurements": {
+                "signal_strength": str,  # "excellent", "good", "fair", "poor", "very_poor"
+                "latency": str,          # "excellent", "good", "fair", "poor"
+                "bandwidth": str         # "excellent", "good", "fair", "poor"
+            },
+            "recommendation": {
+                "action": str,           # "stay_current", "move_location", "switch_band"
+                "target_location": str   # Optional, for move_location
+            }
+        }
+    
+    Returns:
+        JSON with conversational explanation text
+    """
+    try:
+        if not request.is_json:
+            logger.warning("Request missing JSON body")
+            return jsonify({
+                "status": "error",
+                "error": "Request must include JSON body with Content-Type: application/json"
+            }), 400
+        
+        data = request.json
+        
+        # Validate required fields
+        required = ["location", "activity", "measurements", "recommendation"]
+        missing = [f for f in required if f not in data]
+        if missing:
+            logger.warning(f"Missing required fields: {missing}")
+            return jsonify({
+                "status": "error",
+                "error": f"Missing required fields: {', '.join(missing)}"
+            }), 400
+        
+        # Validate measurements
+        measurements = data["measurements"]
+        required_measurements = ["signal_strength", "latency", "bandwidth"]
+        missing_measurements = [f for f in required_measurements if f not in measurements]
+        if missing_measurements:
+            logger.warning(f"Missing measurement fields: {missing_measurements}")
+            return jsonify({
+                "status": "error",
+                "error": f"Missing measurement fields: {', '.join(missing_measurements)}"
+            }), 400
+        
+        # Validate recommendation
+        recommendation = data["recommendation"]
+        if "action" not in recommendation:
+            logger.warning("Missing action in recommendation")
+            return jsonify({
+                "status": "error",
+                "error": "Missing 'action' in recommendation"
+            }), 400
+        
+        # Log the request
+        logger.info(f"Explaining: {data['location']} - {data['activity']} - {recommendation['action']}")
+        
+        # Call service to generate explanation
+        result = service.explain_wifi_recommendation(
+            location=data["location"],
+            activity=data["activity"],
+            measurements=measurements,
+            recommendation=recommendation
+        )
+        
+        # Log the result
+        if result.get("status") == "success":
+            logger.info(f"Explanation generated: {len(result.get('explanation', ''))} chars")
+        else:
+            logger.error(f"Explanation failed: {result.get('error')}")
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        logger.error(f"Unexpected error in /explain: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error",
+            "error": f"Internal server error: {str(e)}"
+        }), 500
+
+
 @app.route('/chat', methods=['POST'])
 def chat_query():
     """
@@ -198,6 +290,7 @@ def not_found(error):
         "available_endpoints": [
             "GET /health",
             "POST /analyze",
+            "POST /explain",
             "POST /chat"
         ]
     }), 404

@@ -1,19 +1,31 @@
 {
-  "scenario_name": "Excellent 5GHz Gaming Setup",
-  "description": "Living room with strong 5GHz signal, ideal for low-latency gaming",
-  "measurement": {
+  "scenario_name": "Excellent Setup - Stay Current (Explainer)",
+  "description": "Living room with excellent classifications for gaming; LLM should explain staying put in friendly tone",
+  "input": {
     "location": "living_room",
-    "signal_dbm": -42,
-    "link_speed_mbps": 866,
-    "latency_ms": 8,
-    "frequency": "5GHz",
-    "activity": "gaming"
+    "activity": "gaming",
+    "measurements": {
+      "signal_strength": "excellent",
+      "latency": "excellent",
+      "bandwidth": "excellent"
+    },
+    "recommendation": {
+      "action": "stay_current"
+    }
   },
-  "expected_outcome": {
-    "current_quality": "excellent",
-    "signal_rating": 9,
-    "suitable_for_activity": true,
-    "recommended_action": "stay_current"
+  "expected_explanation": {
+    "should_contain": [
+      "excellent",
+      "no need",
+      "gaming",
+      "smooth"
+    ],
+    "should_avoid": [
+      "2.4GHz",
+      "5GHz",
+      "dBm"
+    ],
+    "max_sentences": 5
   }
 }
 
