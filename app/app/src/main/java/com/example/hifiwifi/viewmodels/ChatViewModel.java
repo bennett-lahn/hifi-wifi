@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.hifiwifi.models.ChatMessage;
+import com.example.hifiwifi.repository.ClassificationRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,9 @@ public class ChatViewModel extends AndroidViewModel {
     // Mock data storage
     private List<ChatMessage> mockMessages;
     
+    // Classification repository for context
+    private ClassificationRepository classificationRepository;
+    
     public ChatViewModel(@NonNull Application application) {
         super(application);
         
@@ -34,6 +38,9 @@ public class ChatViewModel extends AndroidViewModel {
         messages = new MutableLiveData<>();
         isWaitingForResponse = new MutableLiveData<>(false);
         errorMessage = new MutableLiveData<>();
+        
+        // Initialize classification repository
+        classificationRepository = ClassificationRepository.getInstance();
         
         // Initialize mock data
         mockMessages = new ArrayList<>();
@@ -224,5 +231,65 @@ public class ChatViewModel extends AndroidViewModel {
      */
     public void setWaitingForResponse(boolean waiting) {
         isWaitingForResponse.setValue(waiting);
+    }
+    
+    /**
+     * Get classification context as JSON for SLM prompt
+     * This provides the SLM with WiFi measurement and classification data
+     */
+    public String getClassificationContext() {
+        return classificationRepository.toJson();
+    }
+    
+    /**
+     * Get classification context as pretty-printed JSON
+     */
+    public String getClassificationContextPretty() {
+        return classificationRepository.toJsonPretty();
+    }
+    
+    /**
+     * Get the classification repository instance
+     */
+    public ClassificationRepository getClassificationRepository() {
+        return classificationRepository;
+    }
+    
+    /**
+     * Check if there is any classification data available for context
+     */
+    public boolean hasClassificationContext() {
+        return classificationRepository.getCount() > 0;
+    }
+    
+    /**
+     * Send message with classification context to SLM (MOCK VERSION)
+     * In production, this would send both the user message and classification context to the SLM
+     */
+    public void sendMessageWithContext(String messageText, String roomContext) {
+        if (messageText == null || messageText.trim().isEmpty()) {
+            errorMessage.setValue("Message cannot be empty");
+            return;
+        }
+        
+        // Add user message to mock data
+        ChatMessage userMessage = new ChatMessage(
+            messageText.trim(),
+            true, // isFromUser = true
+            roomContext
+        );
+        mockMessages.add(userMessage);
+        messages.setValue(new ArrayList<>(mockMessages));
+        
+        // Simulate waiting for response
+        isWaitingForResponse.setValue(true);
+        
+        // In production version, you would send this to the SLM:
+        // String context = getClassificationContext();
+        // String fullPrompt = "Context: " + context + "\nUser Query: " + messageText;
+        // sendToSLM(fullPrompt);
+        
+        // For now, simulate SLM response with mock data
+        simulateSLMResponse(messageText.trim(), roomContext);
     }
 }

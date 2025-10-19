@@ -66,11 +66,7 @@ public class WifiTestRunningActivity extends AppCompatActivity {
         applyButtonAnimation(cancelButton);
 
         // Set up button listeners
-        saveButton.setOnClickListener(v -> {
-            // Placeholder for save functionality
-            instructionText.setText("Results saved!");
-        });
-
+        saveButton.setOnClickListener(v -> saveResults());
         rerunButton.setOnClickListener(v -> rerunTest());
         cancelButton.setOnClickListener(v -> finish());
 
@@ -148,6 +144,23 @@ public class WifiTestRunningActivity extends AppCompatActivity {
 
     private void rerunTest() {
         measurementViewModel.rerunTest(currentRoomName, currentActivityType);
+    }
+
+    /**
+     * Save the measurement results and return to main activity
+     * Classifications are automatically saved to the repository during measurement
+     */
+    private void saveResults() {
+        Log.d("WifiTestRunningActivity", "Saving results for room: " + currentRoomName);
+        
+        // Show confirmation message
+        instructionText.setText("Results saved successfully!");
+        
+        // Give user brief moment to see confirmation, then close activity
+        saveButton.postDelayed(() -> {
+            Log.d("WifiTestRunningActivity", "Returning to main activity");
+            finish(); // This returns to MainActivity
+        }, 500); // 500ms delay so user sees the "saved" message
     }
 
     @Override

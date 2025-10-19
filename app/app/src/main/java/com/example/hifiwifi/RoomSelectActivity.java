@@ -2,6 +2,7 @@ package com.example.hifiwifi;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -11,13 +12,22 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.hifiwifi.viewmodels.RoomSelectViewModel;
 
 public class RoomSelectActivity extends AppCompatActivity {
+
+    private static final String TAG = "RoomSelectActivity";
+    private RoomSelectViewModel roomSelectViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room_select);
+
+        // Initialize ViewModel
+        roomSelectViewModel = new ViewModelProvider(this).get(RoomSelectViewModel.class);
 
         TextView titleText = findViewById(R.id.titleText);
         Spinner roomSpinner = findViewById(R.id.roomSpinner);
@@ -42,9 +52,19 @@ public class RoomSelectActivity extends AppCompatActivity {
         applyButtonAnimation(continueButton);
         applyButtonAnimation(cancelButton);
 
-        // Continue → go to ChatActivity
+        // Continue → save selected room to ViewModel and go to ChatActivity
         continueButton.setOnClickListener(v -> {
             String selectedRoom = roomSpinner.getSelectedItem().toString();
+            Log.d(TAG, "User selected room: " + selectedRoom);
+            
+            // Save selection to ViewModel
+            roomSelectViewModel.selectRoom(selectedRoom);
+            
+            // Log available data for selected room
+            String dataSummary = roomSelectViewModel.getRoomDataSummary();
+            Log.d(TAG, "Room data summary: " + dataSummary);
+            
+            // Navigate to ChatActivity
             Intent intent = new Intent(RoomSelectActivity.this, ChatActivity.class);
             intent.putExtra("ROOM_NAME", selectedRoom);
             startActivity(intent);

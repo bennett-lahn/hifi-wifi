@@ -11,6 +11,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.hifiwifi.classifier.ClassificationResult;
 import com.example.hifiwifi.models.NetworkMetrics;
 import com.example.hifiwifi.models.RoomMeasurement;
+import com.example.hifiwifi.repository.ClassificationRepository;
 import com.example.hifiwifi.services.WiFiMeasurementService;
 
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class MeasurementViewModel extends AndroidViewModel {
     private WiFiMeasurementService wifiMeasurementService;
     private List<RoomMeasurement> measurements;
     private List<ClassificationResult> classificationResults;
+    private ClassificationRepository classificationRepository;
     
     public MeasurementViewModel(@NonNull Application application) {
         super(application);
@@ -53,6 +55,7 @@ public class MeasurementViewModel extends AndroidViewModel {
         wifiMeasurementService = new WiFiMeasurementService(application);
         measurements = new ArrayList<>();
         classificationResults = new ArrayList<>();
+        classificationRepository = ClassificationRepository.getInstance();
         
         // Set up service callback
         wifiMeasurementService.setCallback(new WiFiMeasurementService.MeasurementCallback() {
@@ -94,6 +97,14 @@ public class MeasurementViewModel extends AndroidViewModel {
                 
                 // Log comprehensive classification details
                 logClassificationDetails(classificationResult);
+                
+                // Store classification in repository for SLM chat context
+                classificationRepository.addClassification(classificationResult);
+                Log.d(TAG, "Classification saved to repository");
+                
+                // Log repository state and JSON
+                classificationRepository.logState();
+                Log.d(TAG, "Classification JSON:\n" + classificationRepository.toJsonPretty());
                 
                 // Remove existing classification for this room if any
                 classificationResults.removeIf(c -> c.getRoomId().equals(classificationResult.getRoomId()));
@@ -290,6 +301,27 @@ public class MeasurementViewModel extends AndroidViewModel {
      */
     public void clearError() {
         errorMessage.setValue(null);
+    }
+    
+    /**
+     * Get the classification repository instance
+     */
+    public ClassificationRepository getClassificationRepository() {
+        return classificationRepository;
+    }
+    
+    /**
+     * Get classification data as JSON string for SLM chat
+     */
+    public String getClassificationJson() {
+        return classificationRepository.toJson();
+    }
+    
+    /**
+     * Get classification data as pretty-printed JSON string
+     */
+    public String getClassificationJsonPretty() {
+        return classificationRepository.toJsonPretty();
     }
     
     /**
