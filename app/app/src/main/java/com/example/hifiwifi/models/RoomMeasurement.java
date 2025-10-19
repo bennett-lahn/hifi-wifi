@@ -15,9 +15,11 @@ public class RoomMeasurement {
     private double jitterMs;
     private double packetLossPercent;
     private String activityType; // "gaming", "streaming", "video_call", "general"
+    private String frequencyBand; // "2.4GHz" or "5GHz"
 
     public RoomMeasurement() {
         // Default constructor
+        this.frequencyBand = "Unknown";
     }
 
     public RoomMeasurement(String roomId, String roomName, int signalStrengthDbm, 
@@ -45,6 +47,22 @@ public class RoomMeasurement {
         this.jitterMs = jitterMs;
         this.packetLossPercent = packetLossPercent;
         this.activityType = activityType;
+        this.frequencyBand = "Unknown";
+    }
+    
+    public RoomMeasurement(String roomId, String roomName, int signalStrengthDbm, 
+                          int latencyMs, double bandwidthMbps, double jitterMs, 
+                          double packetLossPercent, String activityType, String frequencyBand) {
+        this.roomId = roomId;
+        this.roomName = roomName;
+        this.timestamp = System.currentTimeMillis();
+        this.signalStrengthDbm = signalStrengthDbm;
+        this.latencyMs = latencyMs;
+        this.bandwidthMbps = bandwidthMbps;
+        this.jitterMs = jitterMs;
+        this.packetLossPercent = packetLossPercent;
+        this.activityType = activityType;
+        this.frequencyBand = frequencyBand;
     }
 
     // Getters and Setters
@@ -118,5 +136,13 @@ public class RoomMeasurement {
 
     public void setPacketLossPercent(double packetLossPercent) {
         this.packetLossPercent = packetLossPercent;
+    }
+
+    public String getFrequencyBand() {
+        return frequencyBand;
+    }
+
+    public void setFrequencyBand(String frequencyBand) {
+        this.frequencyBand = frequencyBand;
     }
 }

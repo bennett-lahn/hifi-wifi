@@ -17,10 +17,12 @@ public class ClassificationResult {
     private String mostCriticalMetric;
     private List<String> recommendations;
     private long timestamp;
+    private String frequencyBand; // "2.4GHz" or "5GHz"
     
     public ClassificationResult() {
         this.recommendations = new ArrayList<>();
         this.timestamp = System.currentTimeMillis();
+        this.frequencyBand = "Unknown";
     }
     
     public ClassificationResult(String roomId, String roomName, String activityType, 
@@ -118,6 +120,14 @@ public class ClassificationResult {
     
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+    
+    public String getFrequencyBand() {
+        return frequencyBand;
+    }
+    
+    public void setFrequencyBand(String frequencyBand) {
+        this.frequencyBand = frequencyBand;
     }
     
     /**

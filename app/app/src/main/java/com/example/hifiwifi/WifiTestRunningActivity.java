@@ -11,20 +11,28 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.hifiwifi.viewmodels.MeasurementViewModel;
+import com.example.hifiwifi.viewmodels.WifiTestViewModel;
 import com.example.hifiwifi.models.NetworkMetrics;
 
 public class WifiTestRunningActivity extends AppCompatActivity {
 
+    private static final String TAG = "WifiTestRunningActivity";
+    
     private TextView roomNameDisplay, speedText, latencyText, jitterText, packetLossText, strengthText, instructionText;
-    private Button saveButton, rerunButton, cancelButton; // Added saveButton + bottom cancelButton
+    private Button saveButton, rerunButton, cancelButton;
     private MeasurementViewModel measurementViewModel;
+    private WifiTestViewModel wifiTestViewModel;
     private String currentRoomName;
-    private String currentActivityType = "general";
+    private String currentActivityType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifi_test_running);
+
+        // Initialize ViewModels
+        measurementViewModel = new ViewModelProvider(this).get(MeasurementViewModel.class);
+        wifiTestViewModel = new ViewModelProvider(this).get(WifiTestViewModel.class);
 
         // Initialize views
         roomNameDisplay = findViewById(R.id.roomNameDisplay);
@@ -36,21 +44,31 @@ public class WifiTestRunningActivity extends AppCompatActivity {
         strengthText = findViewById(R.id.strengthText);
         saveButton = findViewById(R.id.saveButton);
         rerunButton = findViewById(R.id.rerunButton);
-        cancelButton = findViewById(R.id.cancelButton); // Bottom cancel
+        cancelButton = findViewById(R.id.cancelButton);
 
-        // Get the passed room name from intent
+        // Get the passed room name and activity type from intent
         currentRoomName = getIntent().getStringExtra("ROOM_NAME");
+        currentActivityType = getIntent().getStringExtra("ACTIVITY_TYPE");
 
-        // Handle null safety (default to Office)
+        // Handle null safety
         if (currentRoomName == null || currentRoomName.isEmpty()) {
             currentRoomName = "Office";
         }
+        
+        if (currentActivityType == null || currentActivityType.isEmpty()) {
+            Log.w(TAG, "Activity type not provided, defaulting to 'general'");
+            currentActivityType = "general";
+        }
+        
+        // Store in ViewModel
+        wifiTestViewModel.setRoomName(currentRoomName);
+        wifiTestViewModel.setActivityType(currentActivityType);
+        
+        Log.d(TAG, "Test configuration - " + wifiTestViewModel.getTestConfigurationSummary());
 
-        // Initialize ViewModel
-        measurementViewModel = new ViewModelProvider(this).get(MeasurementViewModel.class);
-
-        // Set up UI
-        roomNameDisplay.setText("Testing Wi-Fi in " + currentRoomName);
+        // Set up UI with activity type display
+        String activityDisplay = formatActivityType(currentActivityType);
+        roomNameDisplay.setText(String.format("Testing Wi-Fi in %s (%s)", currentRoomName, activityDisplay));
         instructionText.setText("Please stand in the center of the room while we measure your connection...");
 
         // Initialize with placeholder values
@@ -145,20 +163,45 @@ public class WifiTestRunningActivity extends AppCompatActivity {
     private void rerunTest() {
         measurementViewModel.rerunTest(currentRoomName, currentActivityType);
     }
+    
+    /**
+     * Format activity type for display (convert underscores to spaces, capitalize)
+     */
+    private String formatActivityType(String activityType) {
+        if (activityType == null || activityType.isEmpty()) {
+            return "General";
+        }
+        
+        // Replace underscores with spaces and capitalize each word
+        String[] words = activityType.replace("_", " ").split(" ");
+        StringBuilder formatted = new StringBuilder();
+        
+        for (String word : words) {
+            if (word.length() > 0) {
+                formatted.append(Character.toUpperCase(word.charAt(0)));
+                if (word.length() > 1) {
+                    formatted.append(word.substring(1).toLowerCase());
+                }
+                formatted.append(" ");
+            }
+        }
+        
+        return formatted.toString().trim();
+    }
 
     /**
      * Save the measurement results and return to main activity
      * Classifications are automatically saved to the repository during measurement
      */
     private void saveResults() {
-        Log.d("WifiTestRunningActivity", "Saving results for room: " + currentRoomName);
+        Log.d(TAG, "Saving results - " + wifiTestViewModel.getTestConfigurationSummary());
         
         // Show confirmation message
         instructionText.setText("Results saved successfully!");
         
         // Give user brief moment to see confirmation, then close activity
         saveButton.postDelayed(() -> {
-            Log.d("WifiTestRunningActivity", "Returning to main activity");
+            Log.d(TAG, "Returning to main activity");
             finish(); // This returns to MainActivity
         }, 500); // 500ms delay so user sees the "saved" message
     }
@@ -166,7 +209,7 @@ public class WifiTestRunningActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d("WifiTestRunningActivity", "Activity destroyed - cleaning up");
+        Log.d(TAG, "Activity destroyed - cleaning up");
         if (measurementViewModel != null && isFinishing()) {
             measurementViewModel.stopMeasurement();
         }

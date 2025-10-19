@@ -191,6 +191,7 @@ public class ClassificationRepository {
         // Basic info
         measurement.put("roomName", result.getRoomName());
         measurement.put("activityType", result.getActivityType());
+        measurement.put("frequencyBand", result.getFrequencyBand());
         
         // Classification object
         JSONObject classification = new JSONObject();

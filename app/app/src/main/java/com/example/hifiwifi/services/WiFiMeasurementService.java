@@ -166,6 +166,39 @@ public class WiFiMeasurementService {
     }
     
     /**
+     * Get current WiFi frequency band (2.4GHz or 5GHz)
+     * Requires API level 21+
+     */
+    public String getCurrentFrequencyBand() {
+        if (wifiManager == null || wifiManager.getConnectionInfo() == null) {
+            return "Unknown";
+        }
+        
+        try {
+            // API 21+ (Lollipop) supports frequency detection
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                int frequency = wifiManager.getConnectionInfo().getFrequency();
+                
+                // Frequency is in MHz
+                // 2.4 GHz band: 2412-2484 MHz (channels 1-14)
+                // 5 GHz band: 5170-5825 MHz (channels 36-165)
+                if (frequency >= 2400 && frequency < 2500) {
+                    return "2.4GHz";
+                } else if (frequency >= 5000 && frequency < 6000) {
+                    return "5GHz";
+                } else if (frequency > 0) {
+                    // Some other frequency (e.g., 6GHz for WiFi 6E, future-proofing)
+                    return frequency / 1000 + "GHz";
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to get frequency: " + e.getMessage());
+        }
+        
+        return "Unknown";
+    }
+    
+    /**
      * Measure network latency using simple ping approach
      */
     public int measureLatency() {
@@ -655,8 +688,9 @@ public class WiFiMeasurementService {
     private void measurementLoop() {
         while (isMeasuring) {
             try {
-                // Get current signal strength
+                // Get current signal strength and frequency band
                 int signalStrength = getCurrentSignalStrength();
+                String frequencyBand = getCurrentFrequencyBand();
                 
                 // Measure packet loss and collect latency samples for jitter
                 double packetLossPercent = measurePacketLoss();
@@ -670,7 +704,8 @@ public class WiFiMeasurementService {
                     jitterMs,
                     packetLossPercent,
                     true,
-                    currentRoomName
+                    currentRoomName,
+                    frequencyBand
                 );
                 
                 // Update UI on main thread
@@ -705,9 +740,10 @@ public class WiFiMeasurementService {
         Log.d(TAG, "Executing single speed test for room: " + currentRoomName);
         
         try {
-            // Get current signal strength
+            // Get current signal strength and frequency band
             int signalStrength = getCurrentSignalStrength();
-            Log.d(TAG, "Current signal strength: " + signalStrength + " dBm");
+            String frequencyBand = getCurrentFrequencyBand();
+            Log.d(TAG, "Current signal strength: " + signalStrength + " dBm, Frequency: " + frequencyBand);
             
             // Measure packet loss and collect latency samples for jitter
             double packetLossPercent = measurePacketLoss();
@@ -733,7 +769,8 @@ public class WiFiMeasurementService {
                 jitterMs,
                 packetLossPercent,
                 true,
-                currentRoomName
+                currentRoomName,
+                frequencyBand
             );
             
             Log.d(TAG, "Sending initial metrics to UI");
@@ -745,7 +782,7 @@ public class WiFiMeasurementService {
             });
             
             // Perform single comprehensive test (download + ping + jitter + packet loss)
-            performSingleComprehensiveTest(signalStrength, jitterMs, packetLossPercent);
+            performSingleComprehensiveTest(signalStrength, jitterMs, packetLossPercent, frequencyBand);
             
         } catch (Exception e) {
             Log.e(TAG, "Single test error: " + e.getMessage());
@@ -761,7 +798,7 @@ public class WiFiMeasurementService {
     /**
      * Perform a single comprehensive test that measures all metrics in one go
      */
-    private void performSingleComprehensiveTest(int signalStrength, double jitterMs, double packetLossPercent) {
+    private void performSingleComprehensiveTest(int signalStrength, double jitterMs, double packetLossPercent, String frequencyBand) {
         Log.d(TAG, "Starting comprehensive single test");
         
         // Create variables that can be accessed by inner classes
@@ -793,7 +830,8 @@ public class WiFiMeasurementService {
                     finalBandwidth[0],
                     jitterMs,
                     packetLossPercent,
-                    currentActivityType
+                    currentActivityType,
+                    frequencyBand
                 );
                 
                 mainHandler.post(() -> {
@@ -1008,9 +1046,10 @@ public class WiFiMeasurementService {
             );
             
             result.setMostCriticalMetric(mostCriticalMetric);
+            result.setFrequencyBand(metrics.getFrequencyBand());
             
             Log.d(TAG, "Classification complete - Overall: " + overallClassification.getDisplayName() + 
-                      ", Most Critical: " + mostCriticalMetric);
+                      ", Most Critical: " + mostCriticalMetric + ", Frequency: " + metrics.getFrequencyBand());
             
             return result;
         } catch (Exception e) {
@@ -1059,9 +1098,10 @@ public class WiFiMeasurementService {
             );
             
             result.setMostCriticalMetric(mostCriticalMetric);
+            result.setFrequencyBand(measurement.getFrequencyBand());
             
             Log.d(TAG, "Classification complete - Overall: " + overallClassification.getDisplayName() + 
-                      ", Most Critical: " + mostCriticalMetric);
+                      ", Most Critical: " + mostCriticalMetric + ", Frequency: " + measurement.getFrequencyBand());
             
             return result;
         } catch (Exception e) {

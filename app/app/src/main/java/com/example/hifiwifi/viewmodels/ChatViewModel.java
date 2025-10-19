@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.hifiwifi.models.ChatMessage;
 import com.example.hifiwifi.repository.ClassificationRepository;
+import com.example.hifiwifi.services.HTTPService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -260,6 +261,75 @@ public class ChatViewModel extends AndroidViewModel {
      */
     public boolean hasClassificationContext() {
         return classificationRepository.getCount() > 0;
+    }
+    
+    /**
+     * Send message with classification context to SLM via HTTPService
+     * This is the production version that sends to actual Raspberry Pi
+     * 
+     * @param messageText User's message
+     * @param roomContext Current room context
+     * @param httpService HTTPService instance for communication
+     * @param responseCallback Callback to receive SLM response
+     */
+    public void sendMessageToSLM(
+            String messageText, 
+            String roomContext, 
+            HTTPService httpService,
+            SLMResponseCallback responseCallback
+    ) {
+        if (messageText == null || messageText.trim().isEmpty()) {
+            errorMessage.setValue("Message cannot be empty");
+            if (responseCallback != null) {
+                responseCallback.onError("Message cannot be empty");
+            }
+            return;
+        }
+        
+        // Set waiting state
+        isWaitingForResponse.setValue(true);
+        
+        // Note: Classification context is not sent with chat queries in current Flask API version
+        // The Flask /chat endpoint only accepts "query" and optional "format_json"
+        // To include context, Flask API would need to be enhanced
+        
+        // Send chat query to Pi via HTTPService
+        httpService.sendChatQuery(
+            messageText.trim(),
+            new HTTPService.HTTPCallback() {
+                @Override
+                public void onExplanationReceived(String explanation) {
+                    // Response received from SLM
+                    isWaitingForResponse.setValue(false);
+                    if (responseCallback != null) {
+                        responseCallback.onResponse(explanation);
+                    }
+                }
+                
+                @Override
+                public void onHealthCheckSuccess() {
+                    // Not used for chat queries
+                }
+                
+                @Override
+                public void onError(String error) {
+                    // Error occurred
+                    isWaitingForResponse.setValue(false);
+                    errorMessage.setValue("Chat error: " + error);
+                    if (responseCallback != null) {
+                        responseCallback.onError(error);
+                    }
+                }
+            }
+        );
+    }
+    
+    /**
+     * Callback interface for SLM responses
+     */
+    public interface SLMResponseCallback {
+        void onResponse(String response);
+        void onError(String error);
     }
     
     /**

@@ -2,6 +2,7 @@ package com.example.hifiwifi;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -11,27 +12,41 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.hifiwifi.viewmodels.WifiTestViewModel;
 
 public class WifiTestActivity extends AppCompatActivity {
 
+    private static final String TAG = "WifiTestActivity";
+    
     private TextView roomNameText;
     private Button startButton, cancelButton;
     private Spinner activitySpinner;
+    private WifiTestViewModel wifiTestViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifi_test);
 
+        // Initialize ViewModel
+        wifiTestViewModel = new ViewModelProvider(this).get(WifiTestViewModel.class);
+
         roomNameText = findViewById(R.id.roomNameText);
         startButton = findViewById(R.id.startTestButton);
         cancelButton = findViewById(R.id.cancelButton);
         activitySpinner = findViewById(R.id.activitySpinner);
 
-        // ✅ Get the room name passed from MainActivity
+        // Get the room name passed from MainActivity
         String roomName = getIntent().getStringExtra("ROOM_NAME");
+        
+        // Store in ViewModel
+        if (roomName != null && !roomName.isEmpty()) {
+            wifiTestViewModel.setRoomName(roomName);
+        }
 
-        // ✅ Set the text dynamically with the room name
+        // Set the text dynamically with the room name
         roomNameText.setText("Select an activity before testing Wi-Fi in " + roomName + ":");
 
         // Populate dropdown (spinner)
@@ -46,11 +61,16 @@ public class WifiTestActivity extends AppCompatActivity {
 
         startButton.setOnClickListener(v -> {
             String selectedActivity = activitySpinner.getSelectedItem().toString();
+            
+            // Store activity type in ViewModel
+            wifiTestViewModel.setActivityType(selectedActivity);
+            
+            Log.d(TAG, "Starting test - " + wifiTestViewModel.getTestConfigurationSummary());
 
             // Pass both room name and activity to next screen
             Intent intent = new Intent(WifiTestActivity.this, WifiTestRunningActivity.class);
             intent.putExtra("ROOM_NAME", roomName);
-            intent.putExtra("ACTIVITY_TYPE", selectedActivity.toLowerCase());
+            intent.putExtra("ACTIVITY_TYPE", selectedActivity.toLowerCase().replace(" ", "_"));
             startActivity(intent);
         });
 

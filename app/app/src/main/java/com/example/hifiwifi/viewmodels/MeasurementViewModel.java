@@ -333,6 +333,7 @@ public class MeasurementViewModel extends AndroidViewModel {
         Log.i(TAG, "========================================");
         Log.i(TAG, "Room: " + result.getRoomName());
         Log.i(TAG, "Activity Type: " + result.getActivityType());
+        Log.i(TAG, "Frequency Band: " + result.getFrequencyBand());
         Log.i(TAG, "Timestamp: " + new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(result.getTimestamp())));
         Log.i(TAG, "");
         

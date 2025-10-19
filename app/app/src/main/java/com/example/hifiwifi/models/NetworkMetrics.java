@@ -11,6 +11,7 @@ public class NetworkMetrics {
     private double currentPacketLossPercent;
     private boolean isCollecting;
     private String currentRoomName;
+    private String frequencyBand; // "2.4GHz" or "5GHz"
 
     public NetworkMetrics() {
         this.currentSignalDbm = 0;
@@ -20,6 +21,7 @@ public class NetworkMetrics {
         this.currentPacketLossPercent = 0.0;
         this.isCollecting = false;
         this.currentRoomName = "";
+        this.frequencyBand = "Unknown";
     }
 
     public NetworkMetrics(int currentSignalDbm, int currentLatencyMs, 
@@ -43,6 +45,21 @@ public class NetworkMetrics {
         this.currentPacketLossPercent = currentPacketLossPercent;
         this.isCollecting = isCollecting;
         this.currentRoomName = currentRoomName;
+        this.frequencyBand = "Unknown";
+    }
+    
+    public NetworkMetrics(int currentSignalDbm, int currentLatencyMs, 
+                         double currentBandwidthMbps, double currentJitterMs, 
+                         double currentPacketLossPercent, boolean isCollecting, 
+                         String currentRoomName, String frequencyBand) {
+        this.currentSignalDbm = currentSignalDbm;
+        this.currentLatencyMs = currentLatencyMs;
+        this.currentBandwidthMbps = currentBandwidthMbps;
+        this.currentJitterMs = currentJitterMs;
+        this.currentPacketLossPercent = currentPacketLossPercent;
+        this.isCollecting = isCollecting;
+        this.currentRoomName = currentRoomName;
+        this.frequencyBand = frequencyBand;
     }
 
     // Getters and Setters
@@ -100,5 +117,13 @@ public class NetworkMetrics {
 
     public void setCurrentPacketLossPercent(double currentPacketLossPercent) {
         this.currentPacketLossPercent = currentPacketLossPercent;
+    }
+
+    public String getFrequencyBand() {
+        return frequencyBand;
+    }
+
+    public void setFrequencyBand(String frequencyBand) {
+        this.frequencyBand = frequencyBand;
     }
 }

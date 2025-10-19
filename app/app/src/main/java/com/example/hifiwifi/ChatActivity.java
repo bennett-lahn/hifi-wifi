@@ -235,18 +235,49 @@ public class ChatActivity extends AppCompatActivity {
     private void sendMessageToSLM(String message) {
         Log.d(TAG, "User message: " + message);
 
-        // Get classification context
-        String context = chatViewModel.getClassificationContext();
-
-        // For now, use mock response
-        // TODO: Send actual message with context to SLM
+        // Show thinking indicator
         addMessage("🤔 Thinking...", false);
 
-        // Simulate processing delay
-        chatScroll.postDelayed(() -> {
-            addMessage("This is a mock AI reply for " + roomName +
-                      ". Your message: \"" + message + "\"", false);
-        }, 1000);
+        // Send message through ChatViewModel to HTTPService
+        chatViewModel.sendMessageToSLM(
+            message,
+            roomName,
+            httpService,
+            new ChatViewModel.SLMResponseCallback() {
+                @Override
+                public void onResponse(String response) {
+                    // Remove "Thinking..." message and add actual response
+                    runOnUiThread(() -> {
+                        // Remove the last message (thinking indicator)
+                        if (chatContainer.getChildCount() > 0) {
+                            chatContainer.removeViewAt(chatContainer.getChildCount() - 1);
+                        }
+                        // Add SLM response
+                        addMessage(response, false);
+                        Log.i(TAG, "SLM response displayed");
+                    });
+                }
+
+                @Override
+                public void onError(String error) {
+                    // Remove "Thinking..." and show error
+                    runOnUiThread(() -> {
+                        // Remove the last message (thinking indicator)
+                        if (chatContainer.getChildCount() > 0) {
+                            chatContainer.removeViewAt(chatContainer.getChildCount() - 1);
+                        }
+                        // Add error message
+                        addMessage("⚠️ Error: " + error, false);
+                        Log.e(TAG, "SLM error: " + error);
+                        
+                        // Show toast for user feedback
+                        Toast.makeText(ChatActivity.this,
+                            "Failed to get response from SLM",
+                            Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }
+        );
     }
 
     private void addMessage(String message, boolean isUser) {
