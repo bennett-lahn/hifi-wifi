@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@drawable/pink_bg"
     android:padding="16dp">
 
-    <!-- Centered Chat Window -->
+    <!-- Chat Window Container -->
     <LinearLayout
         android:id="@+id/chatWindow"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="@drawable/chat_window_bg"
-        android:padding="16dp"
-        android:layout_centerInParent="true">
+        android:padding="16dp">
 
         <!-- Top bar with image-based close button -->
         <RelativeLayout
             android:id="@+id/topBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:layout_alignParentTop="true">
+            android:padding="12dp">
 
             <ImageButton
                 android:id="@+id/closeButton"

@@ -2,6 +2,8 @@ package com.example.hifiwifi;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -10,6 +12,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -20,9 +25,15 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton closeButton;
     private String roomName;
 
+    // 🧠 Store conversation messages here
+    private final List<String> conversationHistory = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Ensures layout resizes when keyboard shows
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         setContentView(R.layout.activity_chat);
 
         chatContainer = findViewById(R.id.chatContainer);
@@ -45,12 +56,18 @@ public class ChatActivity extends AppCompatActivity {
             finish();
         });
 
+        // Send button logic
         sendButton.setOnClickListener(v -> {
             String message = messageInput.getText().toString().trim();
             if (!message.isEmpty()) {
                 addMessage(message, true);
+                conversationHistory.add("User: " + message); // 🧠 Save user message
                 messageInput.setText("");
-                addMessage("This is a placeholder AI reply for " + roomName + ".", false);
+
+                // Simulate AI reply
+                String aiReply = "This is a placeholder AI reply for " + roomName + ".";
+                addMessage(aiReply, false);
+                conversationHistory.add("AI: " + aiReply); // 🧠 Save AI reply
             }
         });
     }
@@ -71,7 +88,11 @@ public class ChatActivity extends AppCompatActivity {
         msgView.setLayoutParams(params);
 
         chatContainer.addView(msgView);
-
         chatScroll.post(() -> chatScroll.fullScroll(ScrollView.FOCUS_DOWN));
+    }
+
+    // 🧩 Helper method for when you add AI integration
+    public List<String> getConversationHistory() {
+        return conversationHistory;
     }
 }
