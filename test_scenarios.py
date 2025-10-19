@@ -45,17 +45,19 @@ class OllamaDirectTester:
     def test_scenario(self, measurement: Dict[str, Any]) -> Dict[str, Any]:
         """Test a scenario directly with Ollama API using pre-classified values."""
         
-        # Construct the prompt with classifications (prioritize them over raw values)
-        prompt = f"""Analyze this WiFi situation and explain your reasoning:
+        # Construct the prompt with classifications only (no raw numbers)
+        prompt = f"""Analyze this WiFi situation and provide recommendations:
 
 Location: {measurement.get('location', 'unknown')}
-Signal Strength: {measurement.get('signal_strength', 'N/A')} ({measurement.get('signal_dbm', 'N/A')} dBm)
-Latency: {measurement.get('latency', 'N/A')} ({measurement.get('latency_ms', 'N/A')} ms)
-Bandwidth: {measurement.get('bandwidth', 'N/A')} ({measurement.get('link_speed_mbps', 'N/A')} Mbps)
+Signal Strength: {measurement.get('signal_strength', 'N/A')}
+Latency: {measurement.get('latency', 'N/A')}
+Bandwidth: {measurement.get('bandwidth', 'N/A')}
+Jitter: {measurement.get('jitter', 'N/A')}
+Packet Loss: {measurement.get('packet_loss', 'N/A')}
 Frequency Band: {measurement.get('frequency', 'N/A')}
 Current Activity: {measurement.get('activity', 'general use')}
 
-Provide a detailed JSON response explaining WHY you recommend what you recommend."""
+Based on these classifications, provide a JSON response with your recommendation."""
         
         payload = {
             "model": self.model_name,
@@ -272,9 +274,9 @@ def main():
         print_separator("-")
         print(f"Description: {description}")
         print(f"Location: {measurement['location']}")
-        print(f"Signal: {measurement['signal_dbm']} dBm, "
-              f"Speed: {measurement['link_speed_mbps']} Mbps, "
-              f"Latency: {measurement['latency_ms']} ms")
+        print(f"Signal: {measurement.get('signal_strength', 'N/A')}, "
+              f"Latency: {measurement.get('latency', 'N/A')}, "
+              f"Bandwidth: {measurement.get('bandwidth', 'N/A')}")
         print(f"Frequency: {measurement['frequency']}, Activity: {measurement['activity']}")
         print()
         
