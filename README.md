@@ -61,7 +61,7 @@ Android ← JSON Response ← Flask API ← Explanation Text
 
 ### Raspberry Pi Setup
 
-#### 1. Install Ollama and Model
+#### 1. Install Ollama and Pull Base Model
 
 ```bash
 # Update system
@@ -70,22 +70,34 @@ sudo apt update && sudo apt upgrade -y
 # Install Ollama (ARM64 support for Raspberry Pi)
 curl https://ollama.ai/install.sh | sh
 
-# Pull the Qwen 3 model (0.6B - optimized for Pi)
+# Start Ollama server
+ollama serve &
+
+# Pull the Qwen 3 model (0.6B recommended for Pi, or 1.7B if you have 8GB RAM)
 ollama pull qwen3:0.6b
+# OR for larger model: ollama pull qwen3:1.7b
 ```
 
-#### 2. Create Custom WiFi Assistant Model
+#### 2. Clone Repository and Create Custom Model
 
 ```bash
-# Clone or copy this repository to your Raspberry Pi
-cd /home/pi/Hi-FI/models/
+# Clone the repository
+cd ~
+git clone https://github.com/bennett-lahn/hifi-wifi.git Hi-FI
+cd Hi-FI
+git checkout qwen-3-0.5
 
-# Create the custom model from Modelfile
+# Create the custom wifi-assistant model from Modelfile
+cd models
 ollama create wifi-assistant -f Modelfile
 
 # Verify the model is created
 ollama list
 # You should see "wifi-assistant" in the list
+
+# Test the model quickly
+cd ..
+python3 test_ollama_direct.py
 ```
 
 #### 3. Install Python Dependencies
@@ -128,7 +140,101 @@ hostname -I
 # Example output: 192.168.1.100
 ```
 
-#### 5. Keep Services Running (Production)
+#### 5. Connect from Android Phone Over WiFi
+
+**Prerequisites:**
+- Raspberry Pi and Android phone must be on the same WiFi network
+- Note your Pi's IP address (from `hostname -I`)
+
+**Test connection from phone:**
+
+1. **Quick browser test** (verify Pi is accessible):
+   - Open browser on phone
+   - Visit: `http://192.168.1.100:5000/health` (replace with your Pi's IP)
+   - Should see: `{"status":"healthy","ollama_available":true,...}`
+
+2. **Test with REST client app** (optional):
+   - Install "HTTP Request Maker" or similar from Play Store
+   - Create POST request to: `http://192.168.1.100:5000/analyze`
+   - Headers: `Content-Type: application/json`
+   - Body (classification-only format):
+   ```json
+   {
+     "location": "living_room",
+     "signal_strength": "excellent",
+     "latency": "excellent",
+     "bandwidth": "good",
+     "jitter": "excellent",
+     "packet_loss": "excellent",
+     "frequency": "5GHz",
+     "activity": "gaming"
+   }
+   ```
+   - Send and wait 10-30 seconds for response
+
+**Available REST Endpoints:**
+
+- `GET /health` - Check if service is running
+  ```bash
+  curl http://192.168.1.100:5000/health
+  ```
+
+- `POST /analyze` - Analyze WiFi with classifications (Android app uses this)
+  ```bash
+  curl -X POST http://192.168.1.100:5000/analyze \
+    -H "Content-Type: application/json" \
+    -d '{
+      "location": "bedroom",
+      "signal_strength": "good",
+      "latency": "good",
+      "bandwidth": "okay",
+      "jitter": "good",
+      "packet_loss": "good",
+      "frequency": "2.4GHz",
+      "activity": "video_call"
+    }'
+  ```
+
+- `POST /chat` - Natural language queries
+  ```bash
+  curl -X POST http://192.168.1.100:5000/chat \
+    -H "Content-Type: application/json" \
+    -d '{"query": "What signal strength is good for gaming?"}'
+  ```
+
+**Response format (from /analyze):**
+```json
+{
+  "status": "success",
+  "recommendation": {
+    "action": "stay_current",
+    "priority": "low",
+    "message": "Your WiFi connection is excellent for gaming.",
+    "target_location": null,
+    "expected_improvements": {
+      "rssi_dbm": -40,
+      "latency_ms": 8,
+      "jitter_ms": 2,
+      "packet_loss_percent": 0.02
+    }
+  },
+  "analysis": {
+    "current_quality": "excellent",
+    "signal_rating": 9,
+    "suitable_for_activity": true,
+    "bottleneck": "none"
+  }
+}
+```
+
+**Troubleshooting WiFi connection:**
+- Ensure firewall allows port 5000 on Pi (usually no firewall by default)
+- Check both devices show same WiFi network SSID
+- Try Pi's IP with `ping 192.168.1.100` from phone terminal app
+- If using mobile hotspot, some block device-to-device communication
+- Check Flask is running: `curl http://localhost:5000/health` on Pi
+
+#### 6. Keep Services Running (Production)
 
 Create systemd services to auto-start on boot:
 
