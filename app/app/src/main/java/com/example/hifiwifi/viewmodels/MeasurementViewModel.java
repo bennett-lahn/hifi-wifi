@@ -91,6 +91,10 @@ public class MeasurementViewModel extends AndroidViewModel {
             @Override
             public void onClassificationComplete(ClassificationResult classificationResult) {
                 Log.d(TAG, "Classification completed for room: " + classificationResult.getRoomName());
+                
+                // Log comprehensive classification details
+                logClassificationDetails(classificationResult);
+                
                 // Remove existing classification for this room if any
                 classificationResults.removeIf(c -> c.getRoomId().equals(classificationResult.getRoomId()));
                 classificationResults.add(classificationResult);
@@ -141,6 +145,12 @@ public class MeasurementViewModel extends AndroidViewModel {
     public void startMeasurement(String roomId, String roomName, String activityType) {
         Log.d(TAG, "Starting continuous measurement for room: " + roomName);
         
+        if (wifiMeasurementService == null) {
+            Log.e(TAG, "WiFiMeasurementService is null, cannot start measurement");
+            errorMessage.setValue("Service not available");
+            return;
+        }
+        
         if (isMeasuring.getValue() != null && isMeasuring.getValue()) {
             stopMeasurement();
         }
@@ -158,6 +168,12 @@ public class MeasurementViewModel extends AndroidViewModel {
      */
     public void startSingleSpeedTest(String roomName, String activityType) {
         Log.d(TAG, "Starting single speed test for room: " + roomName + ", activity: " + activityType);
+        
+        if (wifiMeasurementService == null) {
+            Log.e(TAG, "WiFiMeasurementService is null, cannot start speed test");
+            errorMessage.setValue("Service not available");
+            return;
+        }
         
         if (isMeasuring.getValue() != null && isMeasuring.getValue()) {
             Log.w(TAG, "Measurement already in progress, stopping previous measurement");
@@ -177,7 +193,9 @@ public class MeasurementViewModel extends AndroidViewModel {
      */
     public void stopMeasurement() {
         isMeasuring.setValue(false);
-        wifiMeasurementService.stopMeasurement();
+        if (wifiMeasurementService != null) {
+            wifiMeasurementService.stopMeasurement();
+        }
     }
     
     /**
@@ -192,6 +210,11 @@ public class MeasurementViewModel extends AndroidViewModel {
      * Add a manual measurement
      */
     public void addMeasurement(String roomId, String roomName, String activityType) {
+        if (wifiMeasurementService == null) {
+            Log.e(TAG, "WiFiMeasurementService is null, cannot add measurement");
+            return;
+        }
+        
         RoomMeasurement measurement = new RoomMeasurement(
             roomId, roomName, 
             wifiMeasurementService.getCurrentSignalStrength(),
@@ -267,6 +290,114 @@ public class MeasurementViewModel extends AndroidViewModel {
      */
     public void clearError() {
         errorMessage.setValue(null);
+    }
+    
+    /**
+     * Log comprehensive classification details to logcat for examination
+     */
+    private void logClassificationDetails(ClassificationResult result) {
+        Log.i(TAG, "========================================");
+        Log.i(TAG, "WiFi Classification Results");
+        Log.i(TAG, "========================================");
+        Log.i(TAG, "Room: " + result.getRoomName());
+        Log.i(TAG, "Activity Type: " + result.getActivityType());
+        Log.i(TAG, "Timestamp: " + new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(result.getTimestamp())));
+        Log.i(TAG, "");
+        
+        // Overall classification
+        Log.i(TAG, "OVERALL CLASSIFICATION: " + result.getOverallClassification().getDisplayName() + 
+                   " (Score: " + result.getOverallClassification().getScore() + "/5)");
+        Log.i(TAG, "");
+        
+        // Individual metric classifications
+        Log.i(TAG, "--- Individual Metric Classifications ---");
+        if (result.getMetricClassification() != null) {
+            Log.i(TAG, "Signal Strength: " + result.getMetricClassification().getSignalStrengthClassification().getDisplayName() + 
+                       " (Score: " + result.getMetricClassification().getSignalStrengthClassification().getScore() + "/5)");
+            Log.i(TAG, "Latency: " + result.getMetricClassification().getLatencyClassification().getDisplayName() + 
+                       " (Score: " + result.getMetricClassification().getLatencyClassification().getScore() + "/5)");
+            Log.i(TAG, "Bandwidth: " + result.getMetricClassification().getBandwidthClassification().getDisplayName() + 
+                       " (Score: " + result.getMetricClassification().getBandwidthClassification().getScore() + "/5)");
+            Log.i(TAG, "Jitter: " + result.getMetricClassification().getJitterClassification().getDisplayName() + 
+                       " (Score: " + result.getMetricClassification().getJitterClassification().getScore() + "/5)");
+            Log.i(TAG, "Packet Loss: " + result.getMetricClassification().getPacketLossClassification().getDisplayName() + 
+                       " (Score: " + result.getMetricClassification().getPacketLossClassification().getScore() + "/5)");
+        }
+        Log.i(TAG, "");
+        
+        // Activity importance weights
+        Log.i(TAG, "--- Activity Importance Weights ---");
+        if (result.getActivityImportance() != null) {
+            Log.i(TAG, "Signal Strength Weight: " + String.format("%.2f", result.getActivityImportance().getSignalStrengthWeight()));
+            Log.i(TAG, "Latency Weight: " + String.format("%.2f", result.getActivityImportance().getLatencyWeight()));
+            Log.i(TAG, "Bandwidth Weight: " + String.format("%.2f", result.getActivityImportance().getBandwidthWeight()));
+            Log.i(TAG, "Jitter Weight: " + String.format("%.2f", result.getActivityImportance().getJitterWeight()));
+            Log.i(TAG, "Packet Loss Weight: " + String.format("%.2f", result.getActivityImportance().getPacketLossWeight()));
+        }
+        Log.i(TAG, "");
+        
+        // Most critical metric
+        if (result.getMostCriticalMetric() != null) {
+            Log.i(TAG, "Most Critical Metric: " + result.getMostCriticalMetric());
+        }
+        Log.i(TAG, "");
+        
+        // Reasoning
+        if (result.getReasoning() != null) {
+            Log.i(TAG, "Reasoning: " + result.getReasoning());
+        }
+        Log.i(TAG, "");
+        
+        // Well performing metrics
+        String[] wellPerforming = result.getWellPerformingMetrics();
+        if (wellPerforming.length > 0) {
+            Log.i(TAG, "Well Performing Metrics:");
+            for (String metric : wellPerforming) {
+                Log.i(TAG, "  - " + metric.replace("_", " "));
+            }
+        } else {
+            Log.i(TAG, "Well Performing Metrics: None");
+        }
+        Log.i(TAG, "");
+        
+        // Poorly performing metrics
+        String[] poorlyPerforming = result.getPoorlyPerformingMetrics();
+        if (poorlyPerforming.length > 0) {
+            Log.i(TAG, "Poorly Performing Metrics:");
+            for (String metric : poorlyPerforming) {
+                Log.i(TAG, "  - " + metric.replace("_", " "));
+            }
+        } else {
+            Log.i(TAG, "Poorly Performing Metrics: None");
+        }
+        Log.i(TAG, "");
+        
+        // Most important poor metric
+        String mostImportantPoor = result.getMostImportantPoorMetric();
+        if (mostImportantPoor != null) {
+            Log.i(TAG, "Most Important Poor Metric: " + mostImportantPoor.replace("_", " "));
+        }
+        Log.i(TAG, "");
+        
+        // Recommendations
+        if (result.getRecommendations() != null && !result.getRecommendations().isEmpty()) {
+            Log.i(TAG, "Recommendations:");
+            for (String recommendation : result.getRecommendations()) {
+                Log.i(TAG, "  * " + recommendation);
+            }
+        } else {
+            Log.i(TAG, "Recommendations: None");
+        }
+        Log.i(TAG, "");
+        
+        // Acceptability for activity
+        boolean acceptable = result.isAcceptableForActivity();
+        Log.i(TAG, "Acceptable for Activity: " + (acceptable ? "YES" : "NO"));
+        Log.i(TAG, "");
+        
+        // Summary
+        Log.i(TAG, "Summary: " + result.getSummary());
+        Log.i(TAG, "========================================");
     }
     
     @Override

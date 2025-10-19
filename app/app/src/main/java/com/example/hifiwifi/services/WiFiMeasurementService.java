@@ -487,6 +487,12 @@ public class WiFiMeasurementService {
                         currentActivityType
                     );
                     callback.onMeasurementComplete(measurement);
+                    
+                    // Perform classification on the basic measurement
+                    ClassificationResult classificationResult = performClassification(measurement);
+                    if (classificationResult != null) {
+                        callback.onClassificationComplete(classificationResult);
+                    }
                 }
             });
             
@@ -535,6 +541,12 @@ public class WiFiMeasurementService {
                     currentActivityType
                 );
                 callback.onMeasurementComplete(measurement);
+                
+                // Perform classification on the basic measurement
+                ClassificationResult classificationResult = performClassification(measurement);
+                if (classificationResult != null) {
+                    callback.onClassificationComplete(classificationResult);
+                }
             }
         });
     }
@@ -787,6 +799,12 @@ public class WiFiMeasurementService {
                 mainHandler.post(() -> {
                     if (callback != null) {
                         callback.onMeasurementComplete(finalMeasurement);
+                        
+                        // Perform classification on the final measurement
+                        ClassificationResult classificationResult = performClassification(finalMeasurement);
+                        if (classificationResult != null) {
+                            callback.onClassificationComplete(classificationResult);
+                        }
                     }
                 });
                 
@@ -959,6 +977,13 @@ public class WiFiMeasurementService {
      */
     private ClassificationResult performClassification(NetworkMetrics metrics) {
         try {
+            Log.d(TAG, "Performing classification on network metrics");
+            Log.d(TAG, "Metrics - Signal: " + metrics.getCurrentSignalDbm() + "dBm, " +
+                      "Latency: " + metrics.getCurrentLatencyMs() + "ms, " +
+                      "Bandwidth: " + metrics.getCurrentBandwidthMbps() + "Mbps, " +
+                      "Jitter: " + metrics.getCurrentJitterMs() + "ms, " +
+                      "Packet Loss: " + metrics.getCurrentPacketLossPercent() + "%");
+            
             // Get activity importance weights
             ActivityImportance activityImportance = importanceFactory.getActivityImportance(currentActivityType);
             
@@ -984,9 +1009,13 @@ public class WiFiMeasurementService {
             
             result.setMostCriticalMetric(mostCriticalMetric);
             
+            Log.d(TAG, "Classification complete - Overall: " + overallClassification.getDisplayName() + 
+                      ", Most Critical: " + mostCriticalMetric);
+            
             return result;
         } catch (Exception e) {
             // Log error but don't crash the measurement
+            Log.e(TAG, "Classification error: " + e.getMessage(), e);
             if (callback != null) {
                 mainHandler.post(() -> callback.onError("Classification error: " + e.getMessage()));
             }
@@ -999,6 +1028,13 @@ public class WiFiMeasurementService {
      */
     private ClassificationResult performClassification(RoomMeasurement measurement) {
         try {
+            Log.d(TAG, "Performing classification on room measurement: " + measurement.getRoomName());
+            Log.d(TAG, "Measurement - Signal: " + measurement.getSignalStrengthDbm() + "dBm, " +
+                      "Latency: " + measurement.getLatencyMs() + "ms, " +
+                      "Bandwidth: " + measurement.getBandwidthMbps() + "Mbps, " +
+                      "Jitter: " + measurement.getJitterMs() + "ms, " +
+                      "Packet Loss: " + measurement.getPacketLossPercent() + "%");
+            
             // Get activity importance weights
             ActivityImportance activityImportance = importanceFactory.getActivityImportance(measurement.getActivityType());
             
@@ -1024,9 +1060,13 @@ public class WiFiMeasurementService {
             
             result.setMostCriticalMetric(mostCriticalMetric);
             
+            Log.d(TAG, "Classification complete - Overall: " + overallClassification.getDisplayName() + 
+                      ", Most Critical: " + mostCriticalMetric);
+            
             return result;
         } catch (Exception e) {
             // Log error but don't crash the measurement
+            Log.e(TAG, "Classification error: " + e.getMessage(), e);
             if (callback != null) {
                 mainHandler.post(() -> callback.onError("Classification error: " + e.getMessage()));
             }
