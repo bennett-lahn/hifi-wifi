@@ -1,83 +1,60 @@
-package com.example.hifiwifi;
+package com.example.hifiwifi; // use your real package
 
 import android.os.Bundle;
-
-import androidx.activity.EdgeToEdge;
+import android.content.Intent;
+import android.widget.ImageButton;
+import android.widget.TextView;
+import android.widget.ViewFlipper;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
-import com.example.hifiwifi.ui.fragments.BLEConnectionFragment;
-import com.example.hifiwifi.ui.fragments.ChatFragment;
-import com.example.hifiwifi.ui.fragments.MeasurementFragment;
-import com.example.hifiwifi.ui.fragments.ResultsFragment;
-import com.example.hifiwifi.ui.fragments.RoomManagementFragment;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-/**
- * MainActivity - UI Skeleton Only
- * No services, no ViewModels, no data connections
- * Just basic UI for development and testing
- */
 public class MainActivity extends AppCompatActivity {
 
-    private BottomNavigationView bottomNavigationView;
-    private FragmentManager fragmentManager;
+    private ViewFlipper cubeFlipper;
+    private TextView roomNameText;
+    private ImageButton arrowLeft, arrowRight;
+
+    private String[] roomNames = {"Living Room", "Office"};
+    private int currentIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.nav_host_fragment), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
-        setupUI();
+        cubeFlipper = findViewById(R.id.cubeFlipper);
+        roomNameText = findViewById(R.id.roomNameText);
+        arrowLeft = findViewById(R.id.arrowLeft);
+        arrowRight = findViewById(R.id.arrowRight);
+
+        updateRoom();
+
+        arrowRight.setOnClickListener(v -> showNextRoom());
+        arrowLeft.setOnClickListener(v -> showPreviousRoom());
+
+        cubeFlipper.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, WifiTestActivity.class);
+            intent.putExtra("ROOM_NAME", roomNameText.getText().toString());
+            startActivity(intent);
+        });
     }
 
-    private void setupUI() {
-        fragmentManager = getSupportFragmentManager();
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
-        
-        // Setup bottom navigation click listener
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            
-            if (itemId == R.id.roomManagementFragment) {
-                showFragment(new RoomManagementFragment(), "RoomManagement");
-                return true;
-            } else if (itemId == R.id.measurementFragment) {
-                showFragment(new MeasurementFragment(), "Measurement");
-                return true;
-            } else if (itemId == R.id.resultsFragment) {
-                showFragment(new ResultsFragment(), "Results");
-                return true;
-            } else if (itemId == R.id.bleConnectionFragment) {
-                showFragment(new BLEConnectionFragment(), "BLEConnection");
-                return true;
-            } else if (itemId == R.id.chatFragment) {
-                showFragment(new ChatFragment(), "Chat");
-                return true;
-            }
-            
-            return false;
-        });
-        
-        // Show default fragment
-        showFragment(new RoomManagementFragment(), "RoomManagement");
+    private void showNextRoom() {
+        cubeFlipper.setInAnimation(this, R.anim.slide_in_right);
+        cubeFlipper.setOutAnimation(this, R.anim.slide_out_left);
+        cubeFlipper.showNext();
+        currentIndex = (currentIndex + 1) % roomNames.length;
+        updateRoom();
     }
 
-    private void showFragment(Fragment fragment, String tag) {
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.nav_host_fragment, fragment, tag);
-        transaction.commit();
+    private void showPreviousRoom() {
+        cubeFlipper.setInAnimation(this, R.anim.slide_in_left);
+        cubeFlipper.setOutAnimation(this, R.anim.slide_out_right);
+        cubeFlipper.showPrevious();
+        currentIndex = (currentIndex - 1 + roomNames.length) % roomNames.length;
+        updateRoom();
+    }
+
+    private void updateRoom() {
+        roomNameText.setText(roomNames[currentIndex]);
     }
 }

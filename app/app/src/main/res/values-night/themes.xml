@@ -1,7 +1,23 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
+    <!-- Base application theme -->
     <style name="Base.Theme.HiFiWifi" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+
+        <!-- Override Material 3's default purple -->
+        <item name="colorPrimary">#FFA0D7</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+
+        <!-- Optional: tweak surface/background colors to match your pink palette -->
+        <item name="colorSecondary">#FFB3DD</item>
+        <item name="colorOnSecondary">#000000</item>
+
+        <!-- Optional ripple color for buttons -->
+        <item name="android:colorControlHighlight">#33FFFFFF</item>
+
+        <!-- You can also remove button tint entirely -->
+        <item name="android:colorButtonNormal">@null</item>
     </style>
+
+    <style name="Theme.HiFiWifi" parent="Base.Theme.HiFiWifi" />
+
 </resources>
