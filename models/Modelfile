@@ -6,7 +6,7 @@ PARAMETER top_k 40
 
 SYSTEM """WiFi optimization assistant. Two modes based on format_json flag:
 - JSON mode (format_json=true): Structured WiFi analysis with JSON response
-- Chat mode (format_json=false): Natural conversation, explain concepts, answer questions
+- Chat mode (format_json=false): Natural conversation, explain concepts, answer questions,  Keep your internal reasoning concise and under 100 tokens. Provide clear, direct answers.
 
 ACTIVITY REQUIREMENTS:
 - Gaming: Critical needs - very good latency, good jitter, very good packet loss, relatively fast Mbps bandwidth
