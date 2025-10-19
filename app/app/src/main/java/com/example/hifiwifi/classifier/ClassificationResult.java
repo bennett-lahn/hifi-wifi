@@ -7,6 +7,7 @@ import java.util.List;
  * Class representing the final classification result with detailed reasoning
  */
 public class ClassificationResult {
+    private String roomId;
     private String roomName;
     private String activityType;
     private WiFiClassification overallClassification;
@@ -22,10 +23,11 @@ public class ClassificationResult {
         this.timestamp = System.currentTimeMillis();
     }
     
-    public ClassificationResult(String roomName, String activityType, 
+    public ClassificationResult(String roomId, String roomName, String activityType, 
                               WiFiClassification overallClassification,
                               MetricClassification metricClassification,
                               ActivityImportance activityImportance) {
+        this.roomId = roomId;
         this.roomName = roomName;
         this.activityType = activityType;
         this.overallClassification = overallClassification;
@@ -38,6 +40,14 @@ public class ClassificationResult {
     }
     
     // Getters and Setters
+    public String getRoomId() {
+        return roomId;
+    }
+    
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
+    }
+    
     public String getRoomName() {
         return roomName;
     }

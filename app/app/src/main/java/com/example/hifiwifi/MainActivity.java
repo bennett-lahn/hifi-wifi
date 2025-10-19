@@ -32,9 +32,14 @@ public class MainActivity extends AppCompatActivity {
         arrowLeft.setOnClickListener(v -> showPreviousRoom());
 
         cubeFlipper.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, WifiTestActivity.class);
-            intent.putExtra("ROOM_NAME", roomNameText.getText().toString());
-            startActivity(intent);
+            try {
+                Intent intent = new Intent(MainActivity.this, WifiTestActivity.class);
+                intent.putExtra("ROOM_NAME", roomNameText.getText().toString());
+                startActivity(intent);
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error starting WifiTestActivity: " + e.getMessage());
+                // Fallback: show error message or handle gracefully
+            }
         });
 
         ImageButton chatButton = findViewById(R.id.chatButton);
