@@ -32,7 +32,7 @@ CORS(app)  # Enable CORS for cross-origin requests
 config = OllamaConfig(
     base_url="http://localhost:11434",
     model_name="wifi-assistant",
-    timeout=90  # Increased for qwen3:1.7b and slower Pi models
+    timeout=120  # Increased for qwen3:1.7b and slower Pi models
 )
 service = OllamaService(config)
 
@@ -97,10 +97,15 @@ def analyze_wifi():
         
         data = request.json
         logger.info(f"Received request: {json.dumps(data, indent=2)}")
+        print("\n" + "="*70)
+        print("📥 INCOMING REQUEST FROM ANDROID APP")
+        print("="*70)
+        print(json.dumps(data, indent=2))
         
         # Check for new Android format (measurements array)
         if "measurements" in data and isinstance(data["measurements"], list):
             logger.info(f"New Android format detected: {len(data['measurements'])} measurement(s)")
+            print(f"\n✓ Detected new Android format: {len(data['measurements'])} measurement(s)")
             
             if not data["measurements"]:
                 logger.warning("Empty measurements array")
@@ -121,6 +126,13 @@ def analyze_wifi():
             
             logger.info(f"  Room: {room_name}, Activity: {activity_type}, Frequency: {frequency_band}")
             logger.info(f"  Classifications: {json.dumps(classification)}")
+            
+            print(f"\n📍 Room: {room_name}")
+            print(f"🎯 Activity: {activity_type}")
+            print(f"📡 Frequency: {frequency_band}")
+            print(f"📊 Classifications:")
+            for key, value in classification.items():
+                print(f"   • {key}: {value}")
             
             # Map to internal format
             measurement = {
@@ -175,9 +187,11 @@ def analyze_wifi():
                 raise ValueError(f"packet_loss '{packet_loss}' must be one of: {', '.join(valid_classifications)}")
             
             logger.info(f"✓ All classifications valid")
+            print(f"\n✓ All classifications are valid")
                 
         except (ValueError, TypeError, AttributeError) as e:
             logger.warning(f"Invalid classification values: {e}")
+            print(f"\n✗ Invalid classification: {e}")
             return jsonify({
                 "status": "error",
                 "error": f"Invalid classification values: {str(e)}"
@@ -199,7 +213,17 @@ def analyze_wifi():
         logger.info(f"→ Sending to Ollama: {measurement['location']} ({measurement['activity']} on {measurement['frequency']})")
         logger.info(f"  Signal: {signal_strength}, Latency: {latency}, Bandwidth: {bandwidth}")
         logger.info(f"  Jitter: {jitter}, Packet Loss: {packet_loss}")
-        logger.info(f"  Timeout: 90s (may take 10-30s on Raspberry Pi)")
+        logger.info(f"  Timeout: 120s (may take 10-30s on Raspberry Pi)")
+        
+        print("\n" + "="*70)
+        print("🤖 SENDING TO OLLAMA LLM")
+        print("="*70)
+        print(f"Location: {measurement['location']}")
+        print(f"Activity: {measurement['activity']} on {measurement['frequency']}")
+        print(f"Metrics: Signal={signal_strength}, Latency={latency}, Bandwidth={bandwidth}")
+        print(f"         Jitter={jitter}, PacketLoss={packet_loss}")
+        print(f"\n⏱️  Timeout: 120s (typical: 10-30s on Raspberry Pi)")
+        print("⏳ Waiting for LLM response...")
         
         # Call Ollama service with classified data
         ollama_start = time.time()
@@ -211,13 +235,36 @@ def analyze_wifi():
             action = result.get("recommendation", {}).get("action", "unknown")
             priority = result.get("recommendation", {}).get("priority", "unknown")
             quality = result.get("analysis", {}).get("current_quality", "unknown")
+            message = result.get("recommendation", {}).get("message", "")
+            suitable = result.get("analysis", {}).get("suitable_for_activity", "unknown")
+            bottleneck = result.get("analysis", {}).get("bottleneck", "none")
+            
             logger.info(f"✓ Analysis complete in {ollama_time:.1f}s")
             logger.info(f"  Action: {action}, Priority: {priority}, Quality: {quality}")
+            
+            print("\n" + "="*70)
+            print(f"✅ LLM RESPONSE RECEIVED (took {ollama_time:.1f}s)")
+            print("="*70)
+            print(f"📊 Quality: {quality}")
+            print(f"🎯 Action: {action}")
+            print(f"⚠️  Priority: {priority}")
+            print(f"✓ Suitable for {measurement['activity']}: {suitable}")
+            print(f"🔍 Bottleneck: {bottleneck}")
+            print(f"\n💬 Message to user:")
+            print(f"   {message}")
+            print("\n" + "="*70)
+            print("📤 SENDING RESPONSE TO ANDROID APP")
+            print("="*70)
+            print(json.dumps(result, indent=2))
+            
         else:
             logger.error(f"✗ Analysis failed: {result.get('error')}")
+            print(f"\n❌ LLM ERROR: {result.get('error')}")
         
         total_time = time.time() - start_time
         logger.info(f"Total request time: {total_time:.1f}s")
+        print(f"\n⏱️  Total processing time: {total_time:.1f}s")
+        print("="*70 + "\n")
         
         return jsonify(result), 200
         
@@ -406,7 +453,7 @@ if __name__ == '__main__':
     logger.info("API endpoints:")
     logger.info("  GET  /health  - Health check")
     logger.info("  POST /analyze - WiFi analysis (accepts new Android format with measurements array)")
-    logger.info("                  Timeout: 90s (may take 10-30s on Raspberry Pi)")
+    logger.info("                  Timeout: 120s (may take 10-30s on Raspberry Pi)")
     logger.info("  POST /explain - Get friendly explanation for recommendation")
     logger.info("  POST /chat    - Natural language queries")
     
