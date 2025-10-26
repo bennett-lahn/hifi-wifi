@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ripple wrapper: uses ripple on API 21+, falls back to the shape item on older devices -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#66FFFFFF"> <!-- semi-transparent white ripple -->
+
+    <!-- item is used as the content under the ripple -->
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFA0D7" />
+            <corners android:radius="28dp" />
+            <padding
+                android:left="14dp"
+                android:top="10dp"
+                android:right="14dp"
+                android:bottom="10dp" />
+        </shape>
+    </item>
+</ripple>
