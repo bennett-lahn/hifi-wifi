@@ -1,24 +1,52 @@
-# Gradle files
-.gradle/
-build/
+# IMPORTANT - ignore large files
+# Ollama Models (DO NOT COMMIT - too large!)
+*.gguf
+*.bin
+*.safetensors
+*.pth
+models/*.gguf
+models/*.bin
 
-# Local configuration file (sdk path, etc)
-local.properties
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+*.egg-info/
 
-# Log/OS Files
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
 *.log
 
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.aab
-*.apk
-output-metadata.json
+# Temporary files
+tmp/
+temp/
+*.tmp
 
-# IntelliJ
+# Android
+*.apk
+*.ap_
+*.dex
+.gradle/
+local.properties
 *.iml
 .idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild
+.cxx
+*.aab
+output-metadata.json
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
@@ -32,3 +60,7 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Don't commit actual model weights
+fine-tuned-models/
+checkpoints/

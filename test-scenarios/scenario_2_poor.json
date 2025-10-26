@@ -1,0 +1,34 @@
+{
+  "scenario_name": "Poor Signal - Move Location (Explainer)",
+  "description": "Bedroom with poor signal during video call; LLM should encourage moving closer without jargon",
+  "input": {
+    "location": "bedroom",
+    "activity": "video_call",
+    "measurements": {
+      "signal_strength": "poor",
+      "latency": "fair",
+      "bandwidth": "fair"
+    },
+    "recommendation": {
+      "action": "move_location",
+      "target_location": "closer to router"
+    }
+  },
+  "expected_explanation": {
+    "should_contain": [
+      "signal",
+      "move",
+      "closer",
+      "video call",
+      "clear",
+      "stable"
+    ],
+    "should_avoid": [
+      "2.4GHz",
+      "5GHz",
+      "dBm"
+    ],
+    "max_sentences": 5
+  }
+}
+

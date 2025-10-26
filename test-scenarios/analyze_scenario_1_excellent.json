@@ -1,0 +1,19 @@
+{
+  "scenario_name": "Excellent Setup - Gaming",
+  "description": "Living room with excellent classifications for gaming",
+  "measurement": {
+    "location": "living_room",
+    "signal_strength": "excellent",
+    "latency": "excellent",
+    "bandwidth": "excellent",
+    "jitter": "excellent",
+    "packet_loss": "excellent",
+    "frequency": "5GHz",
+    "activity": "gaming"
+  },
+  "expected_outcome": {
+    "current_quality": "excellent",
+    "suitable_for_activity": true,
+    "recommended_action": "stay_current"
+  }
+}

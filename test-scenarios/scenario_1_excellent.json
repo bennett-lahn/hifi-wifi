@@ -1,0 +1,31 @@
+{
+  "scenario_name": "Excellent Setup - Stay Current (Explainer)",
+  "description": "Living room with excellent classifications for gaming; LLM should explain staying put in friendly tone",
+  "input": {
+    "location": "living_room",
+    "activity": "gaming",
+    "measurements": {
+      "signal_strength": "excellent",
+      "latency": "excellent",
+      "bandwidth": "excellent"
+    },
+    "recommendation": {
+      "action": "stay_current"
+    }
+  },
+  "expected_explanation": {
+    "should_contain": [
+      "excellent",
+      "no need",
+      "gaming",
+      "smooth"
+    ],
+    "should_avoid": [
+      "2.4GHz",
+      "5GHz",
+      "dBm"
+    ],
+    "max_sentences": 5
+  }
+}
+

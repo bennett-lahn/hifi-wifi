@@ -1,0 +1,19 @@
+{
+  "scenario_name": "Poor Signal - Video Call",
+  "description": "Bedroom with bad signal and jitter during video call",
+  "measurement": {
+    "location": "bedroom",
+    "signal_strength": "bad",
+    "latency": "okay",
+    "bandwidth": "okay",
+    "jitter": "bad",
+    "packet_loss": "okay",
+    "frequency": "2.4GHz",
+    "activity": "video_call"
+  },
+  "expected_outcome": {
+    "current_quality": "bad",
+    "suitable_for_activity": false,
+    "recommended_action": "move_location"
+  }
+}

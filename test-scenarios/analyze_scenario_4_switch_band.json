@@ -1,0 +1,19 @@
+{
+  "scenario_name": "Good Signal on 2.4GHz - Streaming",
+  "description": "Office with good metrics on 2.4GHz for streaming",
+  "measurement": {
+    "location": "office",
+    "signal_strength": "good",
+    "latency": "excellent",
+    "bandwidth": "good",
+    "jitter": "excellent",
+    "packet_loss": "excellent",
+    "frequency": "2.4GHz",
+    "activity": "streaming"
+  },
+  "expected_outcome": {
+    "current_quality": "good",
+    "suitable_for_activity": true,
+    "recommended_action": "switch_band"
+  }
+}

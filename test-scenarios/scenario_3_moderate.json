@@ -1,0 +1,31 @@
+{
+  "scenario_name": "Browsing - Stay Current (Explainer)",
+  "description": "Kitchen with fair signal and good latency/speed; LLM should reassure staying is fine for browsing",
+  "input": {
+    "location": "kitchen",
+    "activity": "browsing",
+    "measurements": {
+      "signal_strength": "fair",
+      "latency": "good",
+      "bandwidth": "good"
+    },
+    "recommendation": {
+      "action": "stay_current"
+    }
+  },
+  "expected_explanation": {
+    "should_contain": [
+      "browsing",
+      "good",
+      "sufficient",
+      "no need"
+    ],
+    "should_avoid": [
+      "2.4GHz",
+      "5GHz",
+      "dBm"
+    ],
+    "max_sentences": 5
+  }
+}
+

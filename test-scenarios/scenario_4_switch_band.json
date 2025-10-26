@@ -1,0 +1,32 @@
+{
+  "scenario_name": "Streaming - Switch to Faster Option (Explainer)",
+  "description": "Office with good signal and excellent latency; LLM should encourage switching to faster option without jargon",
+  "input": {
+    "location": "office",
+    "activity": "streaming",
+    "measurements": {
+      "signal_strength": "good",
+      "latency": "excellent",
+      "bandwidth": "good"
+    },
+    "recommendation": {
+      "action": "switch_band"
+    }
+  },
+  "expected_explanation": {
+    "should_contain": [
+      "faster",
+      "streaming",
+      "better",
+      "speeds",
+      "loading"
+    ],
+    "should_avoid": [
+      "2.4GHz",
+      "5GHz",
+      "dBm"
+    ],
+    "max_sentences": 5
+  }
+}
+

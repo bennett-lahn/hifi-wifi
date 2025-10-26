@@ -1,0 +1,12 @@
+# Python dependencies for WiFi Optimization Assistant
+
+# HTTP requests
+requests>=2.31.0
+
+# Type hints support (Python 3.7+)
+typing-extensions>=4.7.0
+
+# Flask REST API (for simple_api.py)
+flask>=2.3.0
+flask-cors>=4.0.0
+
